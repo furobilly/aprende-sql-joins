@@ -131,6 +131,7 @@
   <button class="tab-btn active" data-view="teoria">📖 Teoría</button>
   <button class="tab-btn" data-view="tablas">🗂️ Tablas y mapa</button>
   <button class="tab-btn" data-view="practica">🧠 Practicar</button>
+  <button class="tab-btn" data-view="analizar">🔬 Analizar SP</button>
 </nav>
 
 <main>
@@ -379,6 +380,30 @@ INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
       <div class="scrollx" id="resultWrap"></div>
     </div>
 
+  </section>
+
+  <!-- ================= ANALIZAR SP ================= -->
+  <section id="view-analizar" class="view">
+    <div class="card">
+      <h2>🔬 Analizador de Stored Procedures</h2>
+      <p class="muted">Pega un stored procedure real de tu trabajo (o súbelo como archivo <code>.sql</code>). Una IA lo analiza y te explica: cuál es la tabla principal, qué tablas se unen y con qué campo, tablas temporales, y qué significa el resultado en términos de negocio.</p>
+      <p class="muted">⚠️ El SP se manda a un servicio externo (Anthropic) para analizarlo — no pegues información con datos personales reales de clientes si te preocupa, usa solo la estructura/lógica del SP.</p>
+      <div class="btnrow">
+        <input type="file" id="spFile" accept=".sql,.txt" style="display:none;">
+        <button class="btn secondary" id="spFileBtn">📁 Subir archivo .sql</button>
+        <span class="badge" id="spUsage">Análisis usados hoy: — / —</span>
+      </div>
+      <textarea id="spInput" spellcheck="false" placeholder="Pega aquí tu stored procedure completo..." style="width:100%;min-height:220px;background:var(--code-bg);color:#c9f7c9;font-family:Consolas,Monaco,monospace;font-size:.88rem;border:1px solid var(--border);border-radius:8px;padding:12px;resize:vertical;"></textarea>
+      <div class="btnrow">
+        <button class="btn" id="spAnalyzeBtn">🔬 Analizar SP</button>
+        <button class="btn secondary" id="spClearBtn">Limpiar</button>
+      </div>
+      <div id="spFeedback"></div>
+    </div>
+    <div class="card" id="spResultCard" style="display:none;">
+      <h3 style="margin-top:0;">Resultado del análisis</h3>
+      <div id="spResult" style="font-size:.92rem;line-height:1.6;"></div>
+    </div>
   </section>
 
 </main>
@@ -1439,6 +1464,91 @@ document.getElementById('checkBtn').addEventListener('click', ()=>{
   progress[currentExercise.id] = true;
   saveProgress();
   fb.innerHTML = '<div class="feedback ok">✅ ¡Correcto! Tu lógica de JOIN es la esperada para este caso. Elige el siguiente ejercicio de la lista.</div>';
+});
+
+// ---------------- ANALIZADOR DE SP (Claude vía Cloudflare Worker) ----------------
+const SP_WORKER_URL = 'https://analizador-sp.furobilly32.workers.dev';
+
+function mdToHtml(md){
+  const lines = md.split('\n');
+  let html = '', inTable = false, tableRows = [], inList = false;
+  const flushTable = ()=>{
+    if(!tableRows.length) return;
+    const [header, , ...rows] = tableRows;
+    const th = header.split('|').map(c=>c.trim()).filter(Boolean);
+    html += '<table class="result"><thead><tr>' + th.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+    rows.forEach(r=>{
+      const td = r.split('|').map(c=>c.trim()).filter(Boolean);
+      html += '<tr>' + td.map(c=>`<td>${c}</td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+    tableRows = []; inTable = false;
+  };
+  lines.forEach(line=>{
+    const l = line.trim();
+    if(l.startsWith('|')){ inTable = true; tableRows.push(l.replace(/^\||\|$/g,'')); return; }
+    else if(inTable){ flushTable(); }
+    if(l.startsWith('```')){ return; }
+    if(l.startsWith('## ')){ html += `<h3 style="color:var(--accent2);margin-top:18px;">${l.slice(3)}</h3>`; return; }
+    if(l.startsWith('# ')){ html += `<h2>${l.slice(2)}</h2>`; return; }
+    if(l.startsWith('---')){ html += '<hr style="border-color:var(--border);margin:14px 0;">'; return; }
+    if(/^\d+\.\s/.test(l) || l.startsWith('- ')){
+      if(!inList){ html += '<ul style="margin:6px 0;">'; inList = true; }
+      html += `<li>${inlineMd(l.replace(/^\d+\.\s|-\s/,''))}</li>`;
+      return;
+    } else if(inList){ html += '</ul>'; inList = false; }
+    if(l === ''){ return; }
+    html += `<p>${inlineMd(l)}</p>`;
+  });
+  if(inTable) flushTable();
+  if(inList) html += '</ul>';
+  return html;
+}
+function inlineMd(t){
+  return t.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`(.+?)`/g,'<code>$1</code>');
+}
+
+document.getElementById('spFileBtn').addEventListener('click', ()=> document.getElementById('spFile').click());
+document.getElementById('spFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=> { document.getElementById('spInput').value = reader.result; };
+  reader.readAsText(file);
+});
+document.getElementById('spClearBtn').addEventListener('click', ()=>{
+  document.getElementById('spInput').value = '';
+  document.getElementById('spFeedback').innerHTML = '';
+  document.getElementById('spResultCard').style.display = 'none';
+});
+document.getElementById('spAnalyzeBtn').addEventListener('click', async ()=>{
+  const sql = document.getElementById('spInput').value.trim();
+  const fb = document.getElementById('spFeedback');
+  const btn = document.getElementById('spAnalyzeBtn');
+  if(!sql){ fb.innerHTML = '<div class="feedback bad">Pega o sube un stored procedure primero.</div>'; return; }
+  fb.innerHTML = '<div class="feedback ok">⏳ Analizando... esto puede tardar unos segundos.</div>';
+  btn.disabled = true;
+  document.getElementById('spResultCard').style.display = 'none';
+  try{
+    const res = await fetch(SP_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql })
+    });
+    const data = await res.json();
+    if(!res.ok || data.error){
+      fb.innerHTML = `<div class="feedback err">⚠️ ${data.error || 'Error desconocido al analizar.'}</div>`;
+      return;
+    }
+    fb.innerHTML = '';
+    document.getElementById('spUsage').textContent = `Análisis usados hoy: ${data.usados} / ${data.limite}`;
+    document.getElementById('spResult').innerHTML = mdToHtml(data.resultado);
+    document.getElementById('spResultCard').style.display = 'block';
+  }catch(e){
+    fb.innerHTML = `<div class="feedback err">⚠️ No se pudo conectar con el analizador: ${e.message}</div>`;
+  }finally{
+    btn.disabled = false;
+  }
 });
 </script>
 </body>
