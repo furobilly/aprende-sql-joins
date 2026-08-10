@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Aprende JOINs — Dalton</title>
+<title>Aprende JOINs — Agencia Automotriz</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
 <style>
   :root{
@@ -99,6 +99,7 @@
   .colref-wrap{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px;}
   .colref-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:170px;flex:1;}
   .colref-card b{color:var(--accent2);font-size:.85rem;}
+  .ref-note{background:#2a2010;border:1px solid var(--warn);border-radius:6px;padding:5px 8px;font-size:.72rem;color:#ffdca8;margin-top:6px;}
   .colref-card .cols{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
   .colref-card .cols span{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.72rem;font-family:Consolas,Monaco,monospace;color:#c9f7c9;}
   .colref-sample{margin-top:8px;overflow-x:auto;}
@@ -119,7 +120,7 @@
 <body>
 
 <header>
-  <h1>🔗 Aprende <span>JOINs</span> — Base práctica Dalton</h1>
+  <h1>🔗 Aprende <span>JOINs</span> — Base práctica Agencia Automotriz</h1>
   <div class="progress-wrap">
     <span id="progressLabel">0/0 ejercicios</span>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -142,6 +143,7 @@
       <p>Imagina que tienes dos hojas de Excel separadas: una con tus <b>Clientes</b> y otra con tus <b>Ventas</b>. La hoja de Ventas no tiene el nombre del cliente, solo un número (<code>ClienteID</code>) que apunta a la otra hoja.</p>
       <p>Un <b>JOIN</b> es la instrucción que le dice a SQL: <i>"pega estas dos hojas usando esta columna en común"</i>, para que en un solo resultado veas el nombre del cliente <b>junto con</b> su venta.</p>
       <p class="muted">La columna en común normalmente es un <b>ID</b>: la tabla "principal" tiene su <code>ClienteID</code> como identificador único (Primary Key / PK), y la tabla de Ventas guarda ese mismo número como referencia (Foreign Key / FK). El JOIN conecta PK con FK.</p>
+      <p class="muted">⚠️ En esta sección de teoría uso nombres cortos genéricos (<code>Ventas</code>, <code>Clientes</code>) solo para enseñar el concepto. En <b>Tablas y mapa</b> y en <b>Practicar</b> vas a ver los nombres <b>reales</b> tal como existen en el sistema (ej. <code>DSVtaPedidos</code>, <code>DSCatCtes</code>), con una nota arriba de cada tabla explicando a qué corresponde.</p>
     </div>
 
     <div class="card">
@@ -150,7 +152,7 @@
       <ol>
         <li><b>¿Qué pregunta me están haciendo?</b> Identifica el sujeto real del reporte. "¿Cuánto facturó cada agencia?" → el resultado gira alrededor de <b>Agencia</b>. "¿Qué clientes no han comprado?" → gira alrededor de <b>Cliente</b>.</li>
         <li><b>¿Qué tabla tiene una fila por cada "cosa" que quiero contar o listar?</b> Esa es tu tabla principal, la que va en el <code>FROM</code>.</li>
-        <li><b>Regla práctica de Dalton:</b> las tablas de <b>hechos</b> (Ventas, Facturas, Órdenes de Servicio, Pagos — cosas que "pasan" y tienen fecha/monto) casi siempre son la tabla principal. Las tablas de <b>catálogo</b> (Clientes, Modelos, Agencias, Servicios — cosas que "son", listas fijas) casi siempre son las que unes con <code>JOIN</code>.</li>
+        <li><b>Regla práctica de una agencia automotriz:</b> las tablas de <b>hechos</b> (Pedidos de venta, Facturas, Documentos de servicio, Pagos — cosas que "pasan" y tienen fecha/monto) casi siempre son la tabla principal. Las tablas de <b>catálogo</b> (Clientes, Modelos, Sucursales, Servicios — cosas que "son", listas fijas) casi siempre son las que unes con <code>JOIN</code>.</li>
         <li><b>¿Qué tablas secundarias necesito?</b> Solo las que tienen el dato que te piden mostrar o filtrar. Si no vas a mostrar ni filtrar nada de una tabla, no la unas — cada JOIN de más es una oportunidad de duplicar filas por accidente.</li>
         <li><b>¿Cuál es el campo de unión (ON)?</b> Busca el FK en tu tabla principal que apunte al PK de la tabla secundaria. Casi siempre se llaman igual o muy parecido (<code>ClienteID</code> en ambas).</li>
         <li><b>¿Qué tipo de JOIN?</b> Si el dato es obligatorio (no debería faltar) → INNER. Si quieres conservar todos los de tu tabla principal aunque no tengan pareja → LEFT.</li>
@@ -262,7 +264,7 @@ INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
 
     <div class="card">
       <h2>⚠️ Diferencia de motor: aquí practicas en SQLite</h2>
-      <p class="muted">En tu trabajo los SPs están en <b>SQL Server</b> (T-SQL). Esta app ejecuta SQL real pero sobre <b>SQLite</b>. Diferencias que verás al leer SPs reales de Dalton:</p>
+      <p class="muted">En tu trabajo los SPs están en <b>SQL Server</b> (T-SQL). Esta app ejecuta SQL real pero sobre <b>SQLite</b>. Diferencias que verás al leer SPs reales de tu empresa:</p>
       <ul>
         <li><code>TOP 5</code> (SQL Server) ≈ <code>LIMIT 5</code> (aquí).</li>
         <li><code>GETDATE()</code> (SQL Server) ≈ <code>date('now')</code> (aquí).</li>
@@ -278,7 +280,7 @@ INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
       <h2>Mapa interactivo de relaciones</h2>
       <p class="muted">Haz clic en cualquier tabla del mapa: se resaltan solo <b>sus</b> conexiones y se atenúa el resto, para que veas de dónde a dónde puedes unir sin ruido visual.</p>
       <div class="diagram-wrap">
-        <svg id="mapSvg" width="920" height="480" viewBox="0 0 920 480" style="min-width:920px;">
+        <svg id="mapSvg" width="1000" height="500" viewBox="0 0 1000 500" style="min-width:1000px;">
           <defs>
             <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4f8cff"/></marker>
           </defs>
@@ -367,7 +369,7 @@ INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
     <!-- editor compartido -->
     <div class="card">
       <h3 style="margin-top:0;">Editor SQL</h3>
-      <textarea id="editor" spellcheck="false" placeholder="SELECT * FROM Clientes;"></textarea>
+      <textarea id="editor" spellcheck="false" placeholder="SELECT * FROM DSCatCtes;"></textarea>
       <div class="btnrow">
         <button class="btn" id="runBtn">▶ Ejecutar</button>
         <button class="btn good" id="checkBtn" style="display:none;">✔ Verificar mi respuesta</button>
@@ -383,179 +385,218 @@ INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
 
 <script>
 let db, SQL;
-const LS_KEY = 'dalton_joins_progress_v2';
+const LS_KEY = 'agencia_joins_progress_v3';
 let tableColumns = {}; // filled after db init via PRAGMA
 
 // ---------------- SCHEMA ----------------
+// Nombres de tablas y columnas 100% reales, tomados literalmente del diccionario de datos
+// de la agencia (PDF de referencia). Los DATOS (filas insertadas) son inventados para practicar.
 const schemaSQL = `
-CREATE TABLE Cat_Agencias (AgenciaID INTEGER PRIMARY KEY, NombreAgencia TEXT, Ciudad TEXT);
-CREATE TABLE Cat_Marcas (MarcaID INTEGER PRIMARY KEY, NombreMarca TEXT);
-CREATE TABLE Cat_Modelos (ModeloID INTEGER PRIMARY KEY, NombreModelo TEXT, MarcaID INTEGER, Anio INTEGER,
-  FOREIGN KEY (MarcaID) REFERENCES Cat_Marcas(MarcaID));
-CREATE TABLE Empleados (EmpleadoID INTEGER PRIMARY KEY, NombreEmpleado TEXT, Puesto TEXT, AgenciaID INTEGER, JefeID INTEGER,
-  FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID), FOREIGN KEY (JefeID) REFERENCES Empleados(EmpleadoID));
-CREATE TABLE Clientes (ClienteID INTEGER PRIMARY KEY, NombreCompleto TEXT, Email TEXT, Ciudad TEXT);
-CREATE TABLE Inventario (InventarioID INTEGER PRIMARY KEY, ModeloID INTEGER, AgenciaID INTEGER, VIN TEXT, Color TEXT, Precio REAL, Stock INTEGER,
-  FOREIGN KEY (ModeloID) REFERENCES Cat_Modelos(ModeloID), FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID));
-CREATE TABLE Ventas (VentaID INTEGER PRIMARY KEY, ClienteID INTEGER, VendedorID INTEGER, InventarioID INTEGER, AgenciaID INTEGER, FechaVenta TEXT, MontoTotal REAL,
-  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (VendedorID) REFERENCES Empleados(EmpleadoID),
-  FOREIGN KEY (InventarioID) REFERENCES Inventario(InventarioID), FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID));
-CREATE TABLE Facturas (FacturaID INTEGER PRIMARY KEY, VentaID INTEGER, MontoFacturado REAL, FechaFactura TEXT,
-  FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID));
-CREATE TABLE Cat_MetodosPago (MetodoPagoID INTEGER PRIMARY KEY, NombreMetodo TEXT);
-CREATE TABLE Pagos (PagoID INTEGER PRIMARY KEY, FacturaID INTEGER, MetodoPagoID INTEGER, MontoPagado REAL, FechaPago TEXT,
-  FOREIGN KEY (FacturaID) REFERENCES Facturas(FacturaID), FOREIGN KEY (MetodoPagoID) REFERENCES Cat_MetodosPago(MetodoPagoID));
-CREATE TABLE Cat_Servicios (ServicioID INTEGER PRIMARY KEY, TipoServicio TEXT, Costo REAL);
-CREATE TABLE Ordenes_Servicio (OrdenID INTEGER PRIMARY KEY, ClienteID INTEGER, ServicioID INTEGER, EmpleadoID INTEGER, FechaServicio TEXT,
-  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (ServicioID) REFERENCES Cat_Servicios(ServicioID),
-  FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID));
-CREATE TABLE Cat_Refacciones (RefaccionID INTEGER PRIMARY KEY, NombreRefaccion TEXT, Costo REAL);
-CREATE TABLE Ordenes_Refacciones (OrdenRefaccionID INTEGER PRIMARY KEY, OrdenID INTEGER, RefaccionID INTEGER, Cantidad INTEGER,
-  FOREIGN KEY (OrdenID) REFERENCES Ordenes_Servicio(OrdenID), FOREIGN KEY (RefaccionID) REFERENCES Cat_Refacciones(RefaccionID));
-CREATE TABLE Garantias (GarantiaID INTEGER PRIMARY KEY, VentaID INTEGER, FechaInicio TEXT, FechaFin TEXT, Estatus TEXT,
-  FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID));
-CREATE TABLE Cotizaciones (CotizacionID INTEGER PRIMARY KEY, ClienteID INTEGER, ModeloID INTEGER, EmpleadoID INTEGER, FechaCotizacion TEXT, MontoEstimado REAL,
-  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (ModeloID) REFERENCES Cat_Modelos(ModeloID),
-  FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID));
+CREATE TABLE DSCatSucu (Cod_Sucu TEXT PRIMARY KEY, Nom_Suc TEXT, Cod_Ciu TEXT, Cod_Edo TEXT, Tel1_Suc TEXT);
+CREATE TABLE DSInvMarcas (Cod_Mar TEXT PRIMARY KEY, Desc_Mar TEXT, VendeNvos_Mar TEXT);
+CREATE TABLE DSCatModelos (Cod_CMod TEXT PRIMARY KEY, Desc_CMod TEXT, Cod_Auto TEXT, FyHRegistro TEXT);
+CREATE TABLE DSCatEmp (Cod_Emp TEXT PRIMARY KEY, Nom_Emp TEXT, Cod_Sucu TEXT, Cod_Dpto TEXT, Email_Emp TEXT,
+  FOREIGN KEY (Cod_Sucu) REFERENCES DSCatSucu(Cod_Sucu));
+CREATE TABLE DSCatCtes (Cod_Cte INTEGER PRIMARY KEY, Nom_Cte TEXT, APat_Cte TEXT, Tel1_Cte TEXT, Email_Cte TEXT, Cod_Ciu TEXT);
+CREATE TABLE DSInvArt (Cod_Art TEXT PRIMARY KEY, Desc_Art TEXT, Status_Art TEXT, TpArt_Art TEXT, Cod_Mar TEXT, PrecLst_Art REAL,
+  FOREIGN KEY (Cod_Mar) REFERENCES DSInvMarcas(Cod_Mar));
+CREATE TABLE DSInvProdSer (NumInv_PSer TEXT PRIMARY KEY, Cod_Sucu TEXT, Cod_Art TEXT, NumSer_PSer TEXT, Cod_Cte INTEGER, Anno_PSer TEXT, Cod_Col TEXT,
+  FOREIGN KEY (Cod_Sucu) REFERENCES DSCatSucu(Cod_Sucu), FOREIGN KEY (Cod_Art) REFERENCES DSInvArt(Cod_Art), FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte));
+CREATE TABLE DSVtaPedidos (Num_Ped TEXT PRIMARY KEY, Cod_Sucu TEXT, Cod_Cte INTEGER, Cod_Vend TEXT, VinAut_Ped TEXT, Cod_Mod TEXT, FPed_Ped TEXT, PrecAut_Ped REAL,
+  FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte), FOREIGN KEY (Cod_Vend) REFERENCES DSCatEmp(Cod_Emp),
+  FOREIGN KEY (VinAut_Ped) REFERENCES DSInvProdSer(NumSer_PSer), FOREIGN KEY (Cod_Mod) REFERENCES DSCatModelos(Cod_CMod));
+CREATE TABLE DSFacFact (NumFac_Fact TEXT PRIMARY KEY, Cod_Cte INTEGER, FFac_Fact TEXT, SubTot_Fact REAL, ImpTot_Fact REAL, Status_Fact TEXT,
+  FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte));
+CREATE TABLE DSFacDocOri (FolDoc_DOri TEXT PRIMARY KEY, Cod_Sucu TEXT, TpDoc_DOri TEXT, FDoc_DOri TEXT, Cod_Cte INTEGER, StatDoc_DOri TEXT, ImpTot_DOri REAL, NumFac_Fact TEXT,
+  FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte), FOREIGN KEY (NumFac_Fact) REFERENCES DSFacFact(NumFac_Fact));
+CREATE TABLE DSCajTpFPag (Cod_Tfp TEXT PRIMARY KEY, Desc_Tfp TEXT, TpFPag_Tp TEXT);
+CREATE TABLE DSCajPagos (Folio_CPag TEXT PRIMARY KEY, Cod_Sucu TEXT, Cod_Cte INTEGER, FPago_CPag TEXT, ImpPag_CPag REAL, Status_CPag TEXT,
+  FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte));
+CREATE TABLE DSSerCatSer (Cod_Serv TEXT PRIMARY KEY, Desc_Serv TEXT, Cod_TpSer TEXT, Horas_Serv REAL);
+CREATE TABLE DSFacDetArtAdi (Cod_Sucu TEXT, FolDoc_DOri TEXT, Cod_Art TEXT, CtdArt_AAdi INTEGER, ImpTot_AAdi REAL,
+  FOREIGN KEY (FolDoc_DOri) REFERENCES DSFacDocOri(FolDoc_DOri), FOREIGN KEY (Cod_Art) REFERENCES DSInvArt(Cod_Art));
+CREATE TABLE DSExtGtaXVin (Numero_Pol TEXT PRIMARY KEY, AutVIN TEXT, Cod_Cte INTEGER, Cod_Vend TEXT, FecInicio_Pol TEXT, FecTermino_Pol TEXT, PrecVta_EGxA REAL,
+  FOREIGN KEY (AutVIN) REFERENCES DSInvProdSer(NumSer_PSer), FOREIGN KEY (Cod_Cte) REFERENCES DSCatCtes(Cod_Cte), FOREIGN KEY (Cod_Vend) REFERENCES DSCatEmp(Cod_Emp));
+CREATE TABLE DSVtaCotiza (Num_Cot TEXT PRIMARY KEY, Cod_Sucu TEXT, Tipo_Cot TEXT, FCot_Cot TEXT, Status_Cot TEXT, Cod_Pros INTEGER, Cod_Vend TEXT, Cod_Mod TEXT,
+  FOREIGN KEY (Cod_Pros) REFERENCES DSCatCtes(Cod_Cte), FOREIGN KEY (Cod_Vend) REFERENCES DSCatEmp(Cod_Emp), FOREIGN KEY (Cod_Mod) REFERENCES DSCatModelos(Cod_CMod));
 `;
 
 const seedSQL = `
-INSERT INTO Cat_Agencias VALUES
-(1,'Toyota GDL','Guadalajara'),(2,'Honda-Kia SLP','San Luis Potosi'),(3,'Kia MTY','Monterrey'),(4,'Lexus CDMX','Ciudad de Mexico');
+INSERT INTO DSCatSucu VALUES
+('GDL','Agencia Guadalajara','Guadalajara','JAL','33-1111-0001'),
+('SLP','Agencia San Luis Potosi','San Luis Potosi','SLP','44-1111-0002'),
+('MTY','Agencia Monterrey','Monterrey','NL','81-1111-0003'),
+('CDMX','Agencia Ciudad de Mexico','Ciudad de Mexico','CDMX','55-1111-0004');
 
-INSERT INTO Cat_Marcas VALUES (1,'Toyota'),(2,'Honda'),(3,'Kia'),(4,'Lexus'),(5,'BYD');
+INSERT INTO DSInvMarcas VALUES ('TOY','Toyota','S'),('HON','Honda','S'),('KIA','Kia','S'),('LEX','Lexus','S'),('BYD','BYD','S');
 
-INSERT INTO Cat_Modelos VALUES
-(1,'Hilux',1,2024),(2,'Corolla',1,2023),(3,'RAV4',1,2025),
-(4,'Civic',2,2024),(5,'CR-V',2,2023),
-(6,'Rio',3,2024),(7,'Sportage',3,2025),
-(8,'Seal',5,2024),
-(9,'ES',4,2024),(10,'NX',4,2025);
+INSERT INTO DSCatModelos VALUES
+('HLX','Hilux','AUTO','2024-01-01'),('COR','Corolla','AUTO','2023-01-01'),('RAV','RAV4','AUTO','2025-01-01'),
+('CIV','Civic','AUTO','2024-01-01'),('CRV','CR-V','AUTO','2023-01-01'),
+('RIO','Rio','AUTO','2024-01-01'),('SPT','Sportage','AUTO','2025-01-01'),
+('SEA','Seal','AUTO','2024-01-01'),('ESX','ES','AUTO','2024-01-01'),('MNX','NX','AUTO','2025-01-01');
 
-INSERT INTO Empleados VALUES
-(1,'Roberto Salinas','Gerente',1,NULL),(2,'Ana Torres','Vendedor',1,1),(3,'Luis Medina','Vendedor',1,1),
-(4,'Sofia Reyes','Gerente',2,NULL),(5,'Carlos Pena','Vendedor',2,4),(6,'Marta Ibarra','Vendedor',2,4),
-(7,'Victor Garza','Gerente',3,NULL),(8,'Diego Cantu','Vendedor',3,7),
-(9,'Karla Ruiz','Vendedor',4,NULL),(10,'Pablo Nunez','Vendedor',4,NULL);
+INSERT INTO DSCatEmp VALUES
+('E01','Roberto Salinas','GDL','ADMIN','roberto.salinas@agencia.com'),
+('E02','Ana Torres','GDL','VENTAS','ana.torres@agencia.com'),
+('E03','Luis Medina','GDL','VENTAS','luis.medina@agencia.com'),
+('E04','Sofia Reyes','SLP','ADMIN','sofia.reyes@agencia.com'),
+('E05','Carlos Pena','SLP','VENTAS','carlos.pena@agencia.com'),
+('E06','Marta Ibarra','SLP','VENTAS','marta.ibarra@agencia.com'),
+('E07','Victor Garza','MTY','ADMIN','victor.garza@agencia.com'),
+('E08','Diego Cantu','MTY','VENTAS','diego.cantu@agencia.com'),
+('E09','Karla Ruiz','CDMX','VENTAS','karla.ruiz@agencia.com'),
+('E10','Pablo Nunez','CDMX','VENTAS','pablo.nunez@agencia.com');
 
-INSERT INTO Clientes VALUES
-(1,'Jorge Alvarez','jorge.alvarez@mail.com','Guadalajara'),(2,'Mariana Cruz','mariana.cruz@mail.com','Guadalajara'),
-(3,'Ricardo Solis','ricardo.solis@mail.com','San Luis Potosi'),(4,'Paola Vega','paola.vega@mail.com','San Luis Potosi'),
-(5,'Hector Ramos','hector.ramos@mail.com','Monterrey'),(6,'Daniela Fuentes','daniela.fuentes@mail.com','Monterrey'),
-(7,'Ivan Ochoa','ivan.ochoa@mail.com','Ciudad de Mexico'),(8,'Renata Silva','renata.silva@mail.com','Ciudad de Mexico'),
-(9,'Fernando Lopez','fernando.lopez@mail.com','Guadalajara'),(10,'Ximena Rios','ximena.rios@mail.com','Monterrey'),
-(11,'Sergio Duran','sergio.duran@mail.com','San Luis Potosi'),(12,'Andrea Paz','andrea.paz@mail.com','Ciudad de Mexico'),
-(13,'Beto Cabrera','beto.cabrera@mail.com','Guadalajara'),(14,'Lucia Montes','lucia.montes@mail.com','Monterrey'),
-(15,'Omar Trejo','omar.trejo@mail.com','San Luis Potosi');
+INSERT INTO DSCatCtes VALUES
+(1,'Jorge','Alvarez','33-2000-0001','jorge.alvarez@mail.com','GDL'),(2,'Mariana','Cruz','33-2000-0002','mariana.cruz@mail.com','GDL'),
+(3,'Ricardo','Solis','44-2000-0003','ricardo.solis@mail.com','SLP'),(4,'Paola','Vega','44-2000-0004','paola.vega@mail.com','SLP'),
+(5,'Hector','Ramos','81-2000-0005','hector.ramos@mail.com','MTY'),(6,'Daniela','Fuentes','81-2000-0006','daniela.fuentes@mail.com','MTY'),
+(7,'Ivan','Ochoa','55-2000-0007','ivan.ochoa@mail.com','CDMX'),(8,'Renata','Silva','55-2000-0008','renata.silva@mail.com','CDMX'),
+(9,'Fernando','Lopez','33-2000-0009','fernando.lopez@mail.com','GDL'),(10,'Ximena','Rios','81-2000-0010','ximena.rios@mail.com','MTY'),
+(11,'Sergio','Duran','44-2000-0011','sergio.duran@mail.com','SLP'),(12,'Andrea','Paz','55-2000-0012','andrea.paz@mail.com','CDMX'),
+(13,'Beto','Cabrera','33-2000-0013','beto.cabrera@mail.com','GDL'),(14,'Lucia','Montes','81-2000-0014','lucia.montes@mail.com','MTY'),
+(15,'Omar','Trejo','44-2000-0015','omar.trejo@mail.com','SLP');
 
-INSERT INTO Inventario VALUES
-(1,1,1,'VIN-GDL-001','Blanco',620000,3),(2,2,1,'VIN-GDL-002','Rojo',410000,4),(3,3,1,'VIN-GDL-003','Gris',780000,2),
-(4,1,1,'VIN-GDL-004','Negro',635000,1),(5,2,1,'VIN-GDL-005','Azul',415000,2),
-(6,4,2,'VIN-SLP-001','Blanco',430000,3),(7,5,2,'VIN-SLP-002','Plata',455000,2),(8,4,2,'VIN-SLP-003','Negro',420000,2),
-(9,6,3,'VIN-MTY-001','Rojo',380000,3),(10,7,3,'VIN-MTY-002','Blanco',520000,2),(11,6,3,'VIN-MTY-003','Gris',395000,2),(12,7,3,'VIN-MTY-004','Negro',530000,1),
-(13,9,4,'VIN-CDMX-001','Blanco',890000,1),(14,9,4,'VIN-CDMX-002','Negro',910000,1),(15,10,4,'VIN-CDMX-003','Gris',950000,2),
-(16,8,4,'VIN-CDMX-004','Blanco',550000,2);
+INSERT INTO DSInvArt VALUES
+('ART-HLX','Hilux','A','PS','TOY',620000),('ART-COR','Corolla','A','PS','TOY',410000),('ART-RAV','RAV4','A','PS','TOY',780000),
+('ART-CIV','Civic','A','PS','HON',430000),('ART-CRV','CR-V','A','PS','HON',455000),
+('ART-RIO','Rio','A','PS','KIA',380000),('ART-SPT','Sportage','A','PS','KIA',520000),
+('ART-SEA','Seal','A','PS','BYD',550000),('ART-ESX','ES','A','PS','LEX',890000),('ART-MNX','NX','A','PS','LEX',950000),
+('REF-ACE','Filtro de aceite','A','P',NULL,250),('REF-BAL','Balatas delanteras','A','P',NULL,1200),
+('REF-BUJ','Bujias','A','P',NULL,180),('REF-BAN','Banda de tiempo','A','P',NULL,2200),
+('REF-LIQ','Liquido de frenos','A','P',NULL,300),('REF-FIL','Filtro de aire','A','P',NULL,320);
 
-INSERT INTO Ventas VALUES
-(1,1,2,1,1,'2025-01-15',620000),(2,2,2,2,1,'2025-02-03',410000),(3,9,3,4,1,'2025-02-20',635000),
-(4,13,NULL,3,1,'2025-03-05',780000),(5,3,5,6,2,'2025-01-22',430000),(6,4,6,7,2,'2025-02-11',455000),
-(7,11,NULL,8,2,'2025-03-18',420000),(8,5,8,9,3,'2025-01-30',380000),(9,6,8,10,3,'2025-02-25',520000),
-(10,10,8,11,3,'2025-04-02',395000),(11,14,NULL,12,3,'2025-04-10',530000),(12,7,NULL,13,4,'2025-02-14',890000),
-(13,8,NULL,14,4,'2025-03-01',910000),(14,1,3,5,1,'2025-04-15',415000),(15,2,2,1,1,'2024-11-05',610000),
-(16,5,5,6,2,'2024-12-20',425000),(17,3,6,7,2,'2025-05-02',460000),(18,6,8,9,3,'2025-05-14',390000),
-(19,9,3,4,1,'2025-05-20',770000),(20,10,8,10,3,'2025-06-01',540000);
+INSERT INTO DSInvProdSer VALUES
+('INV-GDL-001','GDL','ART-HLX','VIN-GDL-001',1,'2024','Blanco'),('INV-GDL-002','GDL','ART-COR','VIN-GDL-002',2,'2023','Rojo'),
+('INV-GDL-003','GDL','ART-RAV','VIN-GDL-003',13,'2025','Gris'),('INV-GDL-004','GDL','ART-HLX','VIN-GDL-004',NULL,'2024','Negro'),
+('INV-GDL-005','GDL','ART-COR','VIN-GDL-005',1,'2023','Azul'),
+('INV-SLP-001','SLP','ART-CIV','VIN-SLP-001',3,'2024','Blanco'),('INV-SLP-002','SLP','ART-CRV','VIN-SLP-002',4,'2023','Plata'),
+('INV-SLP-003','SLP','ART-CIV','VIN-SLP-003',11,'2024','Negro'),
+('INV-MTY-001','MTY','ART-RIO','VIN-MTY-001',5,'2024','Rojo'),('INV-MTY-002','MTY','ART-SPT','VIN-MTY-002',6,'2025','Blanco'),
+('INV-MTY-003','MTY','ART-RIO','VIN-MTY-003',10,'2024','Gris'),('INV-MTY-004','MTY','ART-SPT','VIN-MTY-004',14,'2025','Negro'),
+('INV-CDMX-001','CDMX','ART-ESX','VIN-CDMX-001',7,'2024','Blanco'),('INV-CDMX-002','CDMX','ART-ESX','VIN-CDMX-002',8,'2024','Negro'),
+('INV-CDMX-003','CDMX','ART-MNX','VIN-CDMX-003',NULL,'2025','Gris'),('INV-CDMX-004','CDMX','ART-SEA','VIN-CDMX-004',NULL,'2024','Blanco');
 
-INSERT INTO Facturas VALUES
-(1,1,620000,'2025-01-16'),(2,2,410000,'2025-02-04'),(3,3,635000,'2025-02-21'),(4,4,780000,'2025-03-06'),
-(5,5,430000,'2025-01-23'),(6,6,455000,'2025-02-12'),(7,8,380000,'2025-01-31'),(8,9,520000,'2025-02-26'),
-(9,10,395000,'2025-04-03'),(10,12,890000,'2025-02-15'),(11,14,415000,'2025-04-16'),(12,15,610000,'2024-11-06'),
-(13,16,425000,'2024-12-21'),(14,17,460500,'2025-05-03'),(15,18,390000,'2025-05-15'),(16,NULL,150000,'2025-03-22'),(17,20,540000,'2025-06-02');
+INSERT INTO DSVtaPedidos VALUES
+('PED-0001','GDL',1,'E02','VIN-GDL-001','HLX','2025-01-15',620000),('PED-0002','GDL',2,'E02','VIN-GDL-002','COR','2025-02-03',410000),
+('PED-0003','GDL',9,'E03','VIN-GDL-003','RAV','2025-02-20',780000),('PED-0004','GDL',13,NULL,NULL,'RAV','2025-03-05',780000),
+('PED-0005','SLP',3,'E05','VIN-SLP-001','CIV','2025-01-22',430000),('PED-0006','SLP',4,'E06','VIN-SLP-002','CRV','2025-02-11',455000),
+('PED-0007','SLP',11,NULL,NULL,'CIV','2025-03-18',420000),('PED-0008','MTY',5,'E08','VIN-MTY-001','RIO','2025-01-30',380000),
+('PED-0009','MTY',6,'E08','VIN-MTY-002','SPT','2025-02-25',520000),('PED-0010','MTY',10,'E08','VIN-MTY-003','RIO','2025-04-02',395000),
+('PED-0011','MTY',14,NULL,NULL,'SPT','2025-04-10',530000),('PED-0012','CDMX',7,NULL,'VIN-CDMX-001','ESX','2025-02-14',890000),
+('PED-0013','CDMX',8,NULL,'VIN-CDMX-002','ESX','2025-03-01',910000),('PED-0014','GDL',1,'E03','VIN-GDL-005','COR','2025-04-15',415000),
+('PED-0015','GDL',2,'E02',NULL,'HLX','2024-11-05',610000),('PED-0016','SLP',5,'E05',NULL,'CIV','2024-12-20',425000),
+('PED-0017','SLP',3,'E06',NULL,'CRV','2025-05-02',460000),('PED-0018','MTY',6,'E08',NULL,'RIO','2025-05-14',390000),
+('PED-0019','GDL',9,'E03',NULL,'RAV','2025-05-20',770000),('PED-0020','MTY',10,'E08',NULL,'SPT','2025-06-01',540000);
 
-INSERT INTO Cat_MetodosPago VALUES (1,'Contado'),(2,'Tarjeta'),(3,'Transferencia'),(4,'Financiamiento');
+INSERT INTO DSFacFact VALUES
+('FAC-0001',1,'2025-02-05',1800,2088,'F'),('FAC-0002',2,'2025-02-16',900,1044,'F'),
+('FAC-0003',3,'2025-02-06',600,696,'F'),('FAC-0004',5,'2025-03-02',900,1044,'F'),
+('FAC-0005',6,'2025-03-11',750,870,'F'),('FAC-0006',9,'2025-03-16',1800,2088,'F'),
+('FAC-0007',12,'2025-04-06',600,696,'F'),('FAC-0008',1,'2025-05-02',1800,2088,'F');
 
-INSERT INTO Pagos VALUES
-(1,1,2,620000,'2025-01-16'),(2,2,1,410000,'2025-02-04'),(3,3,4,635000,'2025-02-22'),(4,4,3,780000,'2025-03-07'),
-(5,5,2,430000,'2025-01-23'),(6,6,1,455000,'2025-02-12'),(7,8,4,520000,'2025-02-27'),(8,9,2,395000,'2025-04-03'),
-(9,10,3,890000,'2025-02-16'),(10,12,3,610000,'2024-11-06'),(11,14,2,460500,'2025-05-04'),(12,15,1,390000,'2025-05-15');
+INSERT INTO DSFacDocOri VALUES
+('OS-0001','GDL','OS','2025-02-01',1,'F',2088,'FAC-0001'),('OS-0002','GDL','OS','2025-02-15',2,'F',1044,'FAC-0002'),
+('OS-0003','SLP','OS','2025-02-05',3,'F',696,'FAC-0003'),('OS-0004','SLP','OS','2025-03-01',5,'F',1044,'FAC-0004'),
+('OS-0005','MTY','OS','2025-03-10',6,'F',870,'FAC-0005'),('OS-0006','GDL','OS','2025-03-15',9,'F',2088,'FAC-0006'),
+('OS-0007','SLP','OS','2025-03-20',4,'E',900,NULL),('OS-0008','MTY','OS','2025-04-01',7,'E',600,NULL),
+('OS-0009','CDMX','OS','2025-04-05',12,'E',750,NULL),('OS-0010','GDL','OS','2025-05-01',1,'E',1800,NULL);
 
-INSERT INTO Cat_Servicios VALUES (1,'Afinacion',1800),(2,'Cambio de aceite',900),(3,'Diagnostico electronico',600),(4,'Alineacion y balanceo',750);
+INSERT INTO DSCajTpFPag VALUES ('CONT','Contado','C'),('TARJ','Tarjeta','T'),('TRAN','Transferencia','T'),('FINA','Financiamiento','F');
 
-INSERT INTO Ordenes_Servicio VALUES
-(1,1,2,2,'2025-02-01'),(2,2,1,2,'2025-02-15'),(3,3,3,5,'2025-02-05'),(4,5,2,8,'2025-03-01'),
-(5,6,4,8,'2025-03-10'),(6,9,1,2,'2025-03-15'),(7,4,2,5,'2025-03-20'),(8,7,3,7,'2025-04-01'),
-(9,12,4,9,'2025-04-05'),(10,1,1,3,'2025-05-01');
+INSERT INTO DSCajPagos VALUES
+('PAG-0001','GDL',1,'2025-01-16',620000,'P'),('PAG-0002','GDL',2,'2025-02-04',410000,'P'),
+('PAG-0003','SLP',3,'2025-01-23',430000,'P'),('PAG-0004','SLP',4,'2025-02-12',455000,'P'),
+('PAG-0005','MTY',5,'2025-01-31',380000,'P'),('PAG-0006','MTY',6,'2025-02-27',520000,'P'),
+('PAG-0007','MTY',10,'2025-04-03',395000,'P'),('PAG-0008','CDMX',7,'2025-02-16',890000,'P'),
+('PAG-0009','GDL',1,'2025-04-16',415000,'P'),('PAG-0010','GDL',2,'2024-11-06',610000,'P'),
+('PAG-0011','SLP',3,'2025-05-04',460500,'P'),('PAG-0012','MTY',6,'2025-05-15',390000,'P');
 
-INSERT INTO Cat_Refacciones VALUES
-(1,'Filtro de aceite',250),(2,'Balatas delanteras',1200),(3,'Bujias',180),(4,'Banda de tiempo',2200),(5,'Liquido de frenos',300),(6,'Filtro de aire',320);
+INSERT INTO DSSerCatSer VALUES ('SERV-AFI','Afinacion','TALLER',3),('SERV-ACE','Cambio de aceite','TALLER',1),
+('SERV-DIA','Diagnostico electronico','TALLER',1.5),('SERV-ALI','Alineacion y balanceo','TALLER',1);
 
-INSERT INTO Ordenes_Refacciones VALUES
-(1,1,1,1),(2,1,3,4),(3,2,1,1),(4,3,5,2),(5,4,1,1),(6,4,6,1),(7,5,2,2),(8,6,1,1),
-(9,7,1,1),(10,7,6,1),(11,8,3,4),(12,9,4,1),(13,10,1,1),(14,10,3,4),(15,10,5,1);
+INSERT INTO DSFacDetArtAdi VALUES
+('GDL','OS-0001','REF-ACE',1,250),('GDL','OS-0001','REF-BUJ',4,720),('GDL','OS-0002','REF-ACE',1,250),
+('SLP','OS-0003','REF-LIQ',2,600),('SLP','OS-0004','REF-ACE',1,250),('SLP','OS-0004','REF-FIL',1,320),
+('MTY','OS-0005','REF-BAL',2,2400),('GDL','OS-0006','REF-ACE',1,250),
+('SLP','OS-0007','REF-ACE',1,250),('SLP','OS-0007','REF-FIL',1,320),
+('MTY','OS-0008','REF-BUJ',4,720),('CDMX','OS-0009','REF-BAN',1,2200),
+('GDL','OS-0010','REF-ACE',1,250),('GDL','OS-0010','REF-BUJ',4,720),('GDL','OS-0010','REF-LIQ',1,300);
 
-INSERT INTO Garantias VALUES
-(1,1,'2025-01-15','2027-01-15','Vigente'),(2,2,'2025-02-03','2027-02-03','Vigente'),(3,3,'2025-02-20','2027-02-20','Vigente'),
-(4,5,'2025-01-22','2027-01-22','Vigente'),(5,6,'2025-02-11','2027-02-11','Vigente'),(6,8,'2025-01-30','2027-01-30','Vigente'),
-(7,9,'2025-02-25','2027-02-25','Vencida'),(8,12,'2025-02-14','2027-02-14','Vigente'),(9,14,'2025-04-15','2027-04-15','Vigente'),
-(10,15,'2024-11-05','2026-11-05','Vencida'),(11,17,'2025-05-02','2027-05-02','Vigente'),(12,20,'2025-06-01','2027-06-01','Vigente');
+INSERT INTO DSExtGtaXVin VALUES
+('POL-0001','VIN-GDL-001',1,'E02','2025-01-15','2027-01-15',15000),('POL-0002','VIN-GDL-002',2,'E02','2025-02-03','2027-02-03',10000),
+('POL-0003','VIN-GDL-003',9,'E03','2025-02-20','2027-02-20',18000),
+('POL-0004','VIN-SLP-001',3,'E05','2025-01-22','2027-01-22',9000),('POL-0005','VIN-SLP-002',4,'E06','2025-02-11','2027-02-11',10500),
+('POL-0006','VIN-MTY-001',5,'E08','2025-01-30','2027-01-30',8000),
+('POL-0007','VIN-MTY-002',6,'E08','2025-02-25','2027-02-25','2027-02-25'),
+('POL-0008','VIN-CDMX-001',7,NULL,'2025-02-14','2027-02-14',20000),
+('POL-0009','VIN-GDL-005',1,'E03','2025-04-15','2027-04-15',9500),
+('POL-0010','VIN-GDL-001',2,'E02','2024-11-05','2026-11-05',15000),
+('POL-0011','VIN-SLP-001',3,'E06','2025-05-02','2027-05-02',9000),
+('POL-0012','VIN-MTY-001',6,'E08','2025-05-14','2027-05-14',8000);
 
-INSERT INTO Cotizaciones VALUES
-(1,4,3,2,'2025-01-10',790000),(2,7,6,8,'2025-01-25',385000),(3,10,9,9,'2025-02-05',895000),
-(4,12,10,9,'2025-02-18',955000),(5,3,1,3,'2025-03-02',625000),(6,15,7,8,'2025-03-14',525000),
-(7,2,4,5,'2025-03-28',435000),(8,11,5,5,'2025-04-09',460000),(9,6,2,3,'2025-04-22',415000),(10,9,8,9,'2025-05-06',555000);
+INSERT INTO DSVtaCotiza VALUES
+('COT-0001','SLP','CN','2025-01-10','L',4,'E05','RAV'),('COT-0002','MTY','CN','2025-01-25','L',7,'E08','RIO'),
+('COT-0003','CDMX','CN','2025-02-05','L',10,'E09','ESX'),('COT-0004','CDMX','CN','2025-02-18','L',12,'E09','MNX'),
+('COT-0005','GDL','CN','2025-03-02','L',3,'E03','HLX'),('COT-0006','MTY','CN','2025-03-14','L',15,'E08','SPT'),
+('COT-0007','SLP','CN','2025-03-28','L',2,'E05','CIV'),('COT-0008','SLP','CN','2025-04-09','L',11,'E05','CRV'),
+('COT-0009','GDL','CN','2025-04-22','L',6,'E03','COR'),('COT-0010','CDMX','CN','2025-05-06','L',9,'E09','SEA');
 `;
 
 // ---------------- METADATA para mapa y wizard ----------------
+// note = a qué concepto de negocio corresponde esta tabla real (se muestra como referencia visible en la app)
 const tableInfo = {
-  Cat_Agencias: 'Catálogo · 4 filas. Agencias/sucursales.',
-  Cat_Marcas: 'Catálogo · 5 filas. Marcas de auto.',
-  Cat_Modelos: 'Catálogo · 10 filas. FK a Cat_Marcas.',
-  Empleados: 'Catálogo · 10 filas. FK a Cat_Agencias, self-join por JefeID.',
-  Clientes: 'Catálogo · 15 filas. Algunos nunca compran (a propósito).',
-  Inventario: 'Hechos · 16 filas. Unidades físicas: FK a Cat_Modelos y Cat_Agencias.',
-  Ventas: 'Hechos · 20 filas. Tabla central: FK a Clientes, Empleados, Inventario, Agencias.',
-  Facturas: 'Hechos · 17 filas. FK a Ventas. Hay huecos y una huérfana (a propósito).',
-  Cat_MetodosPago: 'Catálogo · 4 filas.',
-  Pagos: 'Hechos · 12 filas. FK a Facturas y Cat_MetodosPago. No todas las facturas tienen pago.',
-  Cat_Servicios: 'Catálogo · 4 filas. Tipos de servicio de taller.',
-  Ordenes_Servicio: 'Hechos · 10 filas. FK a Clientes, Cat_Servicios, Empleados.',
-  Cat_Refacciones: 'Catálogo · 6 filas.',
-  Ordenes_Refacciones: 'Tabla puente (muchos-a-muchos) · 15 filas. Conecta Ordenes_Servicio con Cat_Refacciones.',
-  Garantias: 'Hechos · 12 filas. FK a Ventas. No todas las ventas tienen garantía (a propósito).',
-  Cotizaciones: 'Hechos · 10 filas. FK a Clientes, Cat_Modelos, Empleados. No siempre se convierten en venta.'
+  DSCatSucu: { desc:'Catálogo · 4 filas.', note:'Catálogo de sucursales — aquí representa las Agencias.' },
+  DSInvMarcas: { desc:'Catálogo · 5 filas.', note:'Catálogo de marcas de auto.' },
+  DSCatModelos: { desc:'Catálogo · 10 filas.', note:'Catálogo de modelos de autos.' },
+  DSCatEmp: { desc:'Catálogo · 10 filas. FK a DSCatSucu.', note:'Catálogo de empleados. El auto-join usa Cod_Dpto (mismo departamento), no hay campo de jefe directo en la tabla real.' },
+  DSCatCtes: { desc:'Catálogo · 15 filas. Algunos nunca compran (a propósito).', note:'Catálogo de clientes.' },
+  DSInvArt: { desc:'Catálogo · 16 filas. FK a DSInvMarcas.', note:'Catálogo de artículos — incluye autos (TpArt_Art=PS) y refacciones (TpArt_Art=P) en la misma tabla real.' },
+  DSInvProdSer: { desc:'Hechos · 16 filas. FK a DSInvArt y DSCatSucu.', note:'Catálogo de autos x número de inventario — unidades físicas (aquí representa el Inventario).' },
+  DSVtaPedidos: { desc:'Hechos · 20 filas. Tabla central.', note:'Registro de pedidos de venta — aquí representa las Ventas.' },
+  DSFacFact: { desc:'Hechos · 8 filas.', note:'Encabezado de facturas.' },
+  DSFacDocOri: { desc:'Hechos · 10 filas. FK a DSCatCtes y DSFacFact.', note:'Encabezado de documentos origen (OS, PV, CT, CS) — aquí filtrado a tipo OS (Órdenes de Servicio).' },
+  DSCajTpFPag: { desc:'Catálogo · 4 filas.', note:'Catálogo de tipos de formas de pago.' },
+  DSCajPagos: { desc:'Hechos · 12 filas. FK a DSCatCtes.', note:'Encabezado de recibos de pago.' },
+  DSSerCatSer: { desc:'Catálogo · 4 filas.', note:'Catálogo de servicios de taller.' },
+  DSFacDetArtAdi: { desc:'Tabla puente (muchos-a-muchos) · 15 filas.', note:'Detalle de artículos adicionales para órdenes de servicio — conecta DSFacDocOri con DSInvArt.' },
+  DSExtGtaXVin: { desc:'Hechos · 12 filas. No todas las unidades tienen garantía (a propósito).', note:'Registro de extensiones de garantía por VIN.' },
+  DSVtaCotiza: { desc:'Hechos · 10 filas. No siempre se convierten en venta.', note:'Guarda todas las cotizaciones levantadas.' }
 };
 
 const relationships = [
-  {from:'Cat_Modelos', field:'MarcaID', to:'Cat_Marcas', toField:'MarcaID'},
-  {from:'Empleados', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
-  {from:'Empleados', field:'JefeID', to:'Empleados', toField:'EmpleadoID'},
-  {from:'Inventario', field:'ModeloID', to:'Cat_Modelos', toField:'ModeloID'},
-  {from:'Inventario', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
-  {from:'Ventas', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
-  {from:'Ventas', field:'VendedorID', to:'Empleados', toField:'EmpleadoID'},
-  {from:'Ventas', field:'InventarioID', to:'Inventario', toField:'InventarioID'},
-  {from:'Ventas', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
-  {from:'Facturas', field:'VentaID', to:'Ventas', toField:'VentaID'},
-  {from:'Pagos', field:'FacturaID', to:'Facturas', toField:'FacturaID'},
-  {from:'Pagos', field:'MetodoPagoID', to:'Cat_MetodosPago', toField:'MetodoPagoID'},
-  {from:'Ordenes_Servicio', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
-  {from:'Ordenes_Servicio', field:'ServicioID', to:'Cat_Servicios', toField:'ServicioID'},
-  {from:'Ordenes_Servicio', field:'EmpleadoID', to:'Empleados', toField:'EmpleadoID'},
-  {from:'Ordenes_Refacciones', field:'OrdenID', to:'Ordenes_Servicio', toField:'OrdenID'},
-  {from:'Ordenes_Refacciones', field:'RefaccionID', to:'Cat_Refacciones', toField:'RefaccionID'},
-  {from:'Garantias', field:'VentaID', to:'Ventas', toField:'VentaID'},
-  {from:'Cotizaciones', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
-  {from:'Cotizaciones', field:'ModeloID', to:'Cat_Modelos', toField:'ModeloID'},
-  {from:'Cotizaciones', field:'EmpleadoID', to:'Empleados', toField:'EmpleadoID'}
+  {from:'DSCatEmp', field:'Cod_Sucu', to:'DSCatSucu', toField:'Cod_Sucu'},
+  {from:'DSInvArt', field:'Cod_Mar', to:'DSInvMarcas', toField:'Cod_Mar'},
+  {from:'DSInvProdSer', field:'Cod_Art', to:'DSInvArt', toField:'Cod_Art'},
+  {from:'DSInvProdSer', field:'Cod_Sucu', to:'DSCatSucu', toField:'Cod_Sucu'},
+  {from:'DSInvProdSer', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSVtaPedidos', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSVtaPedidos', field:'Cod_Vend', to:'DSCatEmp', toField:'Cod_Emp'},
+  {from:'DSVtaPedidos', field:'VinAut_Ped', to:'DSInvProdSer', toField:'NumSer_PSer'},
+  {from:'DSVtaPedidos', field:'Cod_Mod', to:'DSCatModelos', toField:'Cod_CMod'},
+  {from:'DSFacDocOri', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSFacDocOri', field:'NumFac_Fact', to:'DSFacFact', toField:'NumFac_Fact'},
+  {from:'DSFacFact', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSCajPagos', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSFacDetArtAdi', field:'FolDoc_DOri', to:'DSFacDocOri', toField:'FolDoc_DOri'},
+  {from:'DSFacDetArtAdi', field:'Cod_Art', to:'DSInvArt', toField:'Cod_Art'},
+  {from:'DSExtGtaXVin', field:'AutVIN', to:'DSInvProdSer', toField:'NumSer_PSer'},
+  {from:'DSExtGtaXVin', field:'Cod_Cte', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSExtGtaXVin', field:'Cod_Vend', to:'DSCatEmp', toField:'Cod_Emp'},
+  {from:'DSVtaCotiza', field:'Cod_Pros', to:'DSCatCtes', toField:'Cod_Cte'},
+  {from:'DSVtaCotiza', field:'Cod_Vend', to:'DSCatEmp', toField:'Cod_Emp'},
+  {from:'DSVtaCotiza', field:'Cod_Mod', to:'DSCatModelos', toField:'Cod_CMod'}
 ];
 
 const mapLayout = [
-  ['Cat_Agencias','Cat_Marcas','Cat_MetodosPago','Cat_Servicios'],
-  ['Cat_Modelos','Empleados','Cat_Refacciones','Garantias'],
-  ['Inventario','Ventas','Facturas','Cotizaciones'],
-  ['Clientes','Pagos','Ordenes_Servicio','Ordenes_Refacciones']
+  ['DSCatSucu','DSInvMarcas','DSCajTpFPag','DSSerCatSer'],
+  ['DSCatModelos','DSCatEmp','DSInvArt','DSExtGtaXVin'],
+  ['DSInvProdSer','DSVtaPedidos','DSFacFact','DSVtaCotiza'],
+  ['DSCatCtes','DSCajPagos','DSFacDocOri','DSFacDetArtAdi']
 ];
 const nodePos = {};
-mapLayout.forEach((row,r)=> row.forEach((name,c)=>{ nodePos[name] = {x: c*220+130, y: r*110+55}; }));
+mapLayout.forEach((row,r)=> row.forEach((name,c)=>{ nodePos[name] = {x: c*230+140, y: r*115+55}; }));
 
 function relatedOf(table){
   return relationships.filter(r=>r.from===table || r.to===table);
@@ -563,6 +604,7 @@ function relatedOf(table){
 
 function colRefCardHTML(table){
   const cols = tableColumns[table] || [];
+  const info = tableInfo[table];
   let sampleHtml = '';
   try{
     const res = db.exec(`SELECT * FROM ${table} LIMIT 3`)[0];
@@ -570,7 +612,8 @@ function colRefCardHTML(table){
       sampleHtml = `<div class="colref-sample"><table><thead><tr>${res.columns.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${res.values.map(r=>`<tr>${r.map(v=>`<td>${v===null?'<i>NULL</i>':v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     }
   }catch(e){}
-  return `<div class="colref-card"><b>${table}</b><div class="cols">${cols.map(c=>`<span>${c}</span>`).join('')}</div>${sampleHtml}</div>`;
+  const note = info ? `<div class="ref-note">📎 ${info.note}</div>` : '';
+  return `<div class="colref-card"><b>${table}</b>${note}<div class="cols">${cols.map(c=>`<span>${c}</span>`).join('')}</div>${sampleHtml}</div>`;
 }
 
 // ---------------- EJERCICIOS (wizard) ----------------
@@ -586,267 +629,193 @@ const levels = [
 ];
 
 const exercises = [
-  // NIVEL 1 — INNER JOIN simple (12)
-  {id:'l1e1', level:1, pill:'inner', main:'Ventas',
-    secondary:[{table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}],
-    text:()=>'Muestra el nombre del cliente y el monto de cada venta.',
-    sql:()=>`SELECT c.NombreCompleto, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID`},
-  {id:'l1e2', level:1, pill:'inner', main:'Inventario',
-    secondary:[{table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}],
-    text:()=>'Muestra el VIN de cada unidad en inventario junto con el nombre del modelo.',
-    sql:()=>`SELECT i.VIN, m.NombreModelo FROM Inventario i INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID`},
-  {id:'l1e3', level:1, pill:'inner', main:'Ordenes_Servicio',
-    secondary:[{table:'Cat_Servicios', from:'Ordenes_Servicio', onFrom:'ServicioID', onTo:'ServicioID', type:'INNER'}],
-    text:()=>'Muestra la fecha de cada orden de servicio junto con el tipo de servicio realizado.',
-    sql:()=>`SELECT os.FechaServicio, s.TipoServicio FROM Ordenes_Servicio os INNER JOIN Cat_Servicios s ON os.ServicioID=s.ServicioID`},
-  {id:'l1e4', level:1, pill:'inner', main:'Empleados',
-    secondary:[{table:'Cat_Agencias', from:'Empleados', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}],
-    text:()=>'Muestra el nombre de cada empleado junto con la ciudad de la agencia donde trabaja.',
-    sql:()=>`SELECT e.NombreEmpleado, a.Ciudad FROM Empleados e INNER JOIN Cat_Agencias a ON e.AgenciaID=a.AgenciaID`},
-  {id:'l1e5', level:1, pill:'inner', main:'Inventario',
-    secondary:[{table:'Cat_Agencias', from:'Inventario', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}],
-    text:()=>'Muestra el VIN de cada unidad y el nombre de la agencia donde está.',
-    sql:()=>`SELECT i.VIN, a.NombreAgencia FROM Inventario i INNER JOIN Cat_Agencias a ON i.AgenciaID=a.AgenciaID`},
-  {id:'l1e6', level:1, pill:'inner', main:'Ordenes_Servicio',
-    secondary:[{table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}],
-    text:()=>'Muestra la fecha de cada orden de servicio y el nombre del empleado que la atendió.',
-    sql:()=>`SELECT os.FechaServicio, e.NombreEmpleado FROM Ordenes_Servicio os INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID`},
-  {id:'l1e7', level:1, pill:'inner', main:'Ordenes_Servicio',
-    secondary:[{table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}],
-    text:()=>'Muestra el nombre del cliente y la fecha de cada orden de servicio que ha pedido.',
-    sql:()=>`SELECT c.NombreCompleto, os.FechaServicio FROM Ordenes_Servicio os INNER JOIN Clientes c ON os.ClienteID=c.ClienteID`},
-  {id:'l1e8', level:1, pill:'inner', main:'Pagos',
-    secondary:[{table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'INNER'}],
-    text:()=>'Muestra el monto pagado y el nombre del método de pago usado en cada pago.',
-    sql:()=>`SELECT p.MontoPagado, mp.NombreMetodo FROM Pagos p INNER JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID`},
-  {id:'l1e9', level:1, pill:'inner', main:'Cotizaciones',
-    secondary:[{table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}],
-    text:()=>'Muestra el monto estimado de cada cotización junto con el nombre del empleado que la hizo.',
-    sql:()=>`SELECT co.MontoEstimado, e.NombreEmpleado FROM Cotizaciones co INNER JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID`},
-  {id:'l1e10', level:1, pill:'inner', main:'Facturas',
-    secondary:[{table:'Ventas', from:'Facturas', onFrom:'VentaID', onTo:'VentaID', type:'INNER'}],
-    text:()=>'Muestra el monto facturado y la fecha de venta original de cada factura.',
-    sql:()=>`SELECT f.MontoFacturado, v.FechaVenta FROM Facturas f INNER JOIN Ventas v ON f.VentaID=v.VentaID`},
-  {id:'l1e11', level:1, pill:'inner', main:'Ordenes_Refacciones',
-    secondary:[{table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}],
-    text:()=>'Muestra el nombre de cada refacción usada junto con la cantidad usada en esa orden.',
-    sql:()=>`SELECT r.NombreRefaccion, orf.Cantidad FROM Ordenes_Refacciones orf INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
-  {id:'l1e12', level:1, pill:'inner', main:'Garantias',
-    secondary:[{table:'Ventas', from:'Garantias', onFrom:'VentaID', onTo:'VentaID', type:'INNER'}],
-    text:()=>'Muestra el estatus de cada garantía junto con el monto de la venta original.',
-    sql:()=>`SELECT g.Estatus, v.MontoTotal FROM Garantias g INNER JOIN Ventas v ON g.VentaID=v.VentaID`},
+  // NIVEL 1 — INNER JOIN simple (7)
+  {id:'l1e1', level:1, pill:'inner', main:'DSCatEmp',
+    secondary:[{table:'DSCatSucu', from:'DSCatEmp', onFrom:'Cod_Sucu', onTo:'Cod_Sucu', type:'INNER'}],
+    text:()=>'Muestra el nombre de cada empleado junto con el nombre de su sucursal.',
+    sql:()=>`SELECT e.Nom_Emp, s.Nom_Suc FROM DSCatEmp e INNER JOIN DSCatSucu s ON e.Cod_Sucu=s.Cod_Sucu`},
+  {id:'l1e2', level:1, pill:'inner', main:'DSInvArt',
+    secondary:[{table:'DSInvMarcas', from:'DSInvArt', onFrom:'Cod_Mar', onTo:'Cod_Mar', type:'INNER'}],
+    text:()=>'Muestra la descripción de cada artículo junto con el nombre de su marca (solo artículos que tienen marca registrada).',
+    sql:()=>`SELECT a.Desc_Art, m.Desc_Mar FROM DSInvArt a INNER JOIN DSInvMarcas m ON a.Cod_Mar=m.Cod_Mar`},
+  {id:'l1e3', level:1, pill:'inner', main:'DSInvProdSer',
+    secondary:[{table:'DSInvArt', from:'DSInvProdSer', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'}],
+    text:()=>'Muestra el número de serie (VIN) de cada unidad junto con la descripción del artículo.',
+    sql:()=>`SELECT p.NumSer_PSer, a.Desc_Art FROM DSInvProdSer p INNER JOIN DSInvArt a ON p.Cod_Art=a.Cod_Art`},
+  {id:'l1e4', level:1, pill:'inner', main:'DSVtaPedidos',
+    secondary:[{table:'DSCatCtes', from:'DSVtaPedidos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}],
+    text:()=>'Muestra el número de pedido y el nombre del cliente que lo hizo.',
+    sql:()=>`SELECT v.Num_Ped, c.Nom_Cte FROM DSVtaPedidos v INNER JOIN DSCatCtes c ON v.Cod_Cte=c.Cod_Cte`},
+  {id:'l1e5', level:1, pill:'inner', main:'DSVtaPedidos',
+    secondary:[{table:'DSCatEmp', from:'DSVtaPedidos', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'INNER'}],
+    text:()=>'Muestra el número de pedido y el nombre del vendedor que lo realizó (solo pedidos con vendedor asignado).',
+    sql:()=>`SELECT v.Num_Ped, e.Nom_Emp FROM DSVtaPedidos v INNER JOIN DSCatEmp e ON v.Cod_Vend=e.Cod_Emp`},
+  {id:'l1e6', level:1, pill:'inner', main:'DSFacDocOri',
+    secondary:[{table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}],
+    text:()=>'Muestra el folio de cada documento de servicio (OS) junto con el nombre del cliente.',
+    sql:()=>`SELECT d.FolDoc_DOri, c.Nom_Cte FROM DSFacDocOri d INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte`},
+  {id:'l1e7', level:1, pill:'inner', main:'DSCajPagos',
+    secondary:[{table:'DSCatCtes', from:'DSCajPagos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}],
+    text:()=>'Muestra el folio de cada pago junto con el nombre del cliente que pagó.',
+    sql:()=>`SELECT p.Folio_CPag, c.Nom_Cte FROM DSCajPagos p INNER JOIN DSCatCtes c ON p.Cod_Cte=c.Cod_Cte`},
 
-  // NIVEL 2 — INNER JOIN múltiple (10)
-  {id:'l2e1', level:2, pill:'inner', main:'Ventas',
+  // NIVEL 2 — INNER JOIN múltiple (6)
+  {id:'l2e1', level:2, pill:'inner', main:'DSVtaPedidos',
     secondary:[
-      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'},
-      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSVtaPedidos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSInvProdSer', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'NumSer_PSer', type:'INNER'},
+      {table:'DSInvArt', from:'DSInvProdSer', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'}
     ],
-    genParams:()=>({anio:randOf([2023,2024,2025])}),
-    text:p=>`Muestra nombre del cliente, nombre del modelo y monto de venta, solo para autos del año ${p.anio}.`,
-    sql:p=>`SELECT c.NombreCompleto, m.NombreModelo, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID WHERE m.Anio=${p.anio}`},
-  {id:'l2e2', level:2, pill:'inner', main:'Cotizaciones',
+    text:()=>'Muestra el cliente, el VIN de la unidad y la descripción del artículo vendido, solo para pedidos con unidad asignada.',
+    sql:()=>`SELECT c.Nom_Cte, p.NumSer_PSer, a.Desc_Art FROM DSVtaPedidos v INNER JOIN DSCatCtes c ON v.Cod_Cte=c.Cod_Cte INNER JOIN DSInvProdSer p ON v.VinAut_Ped=p.NumSer_PSer INNER JOIN DSInvArt a ON p.Cod_Art=a.Cod_Art`},
+  {id:'l2e2', level:2, pill:'inner', main:'DSVtaPedidos',
     secondary:[
-      {table:'Clientes', from:'Cotizaciones', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Cat_Modelos', from:'Cotizaciones', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
+      {table:'DSCatEmp', from:'DSVtaPedidos', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'INNER'},
+      {table:'DSCatSucu', from:'DSCatEmp', onFrom:'Cod_Sucu', onTo:'Cod_Sucu', type:'INNER'}
     ],
-    text:()=>'Muestra nombre de cliente, modelo cotizado y monto estimado de cada cotización.',
-    sql:()=>`SELECT cl.NombreCompleto, m.NombreModelo, co.MontoEstimado FROM Cotizaciones co INNER JOIN Clientes cl ON co.ClienteID=cl.ClienteID INNER JOIN Cat_Modelos m ON co.ModeloID=m.ModeloID`},
-  {id:'l2e3', level:2, pill:'inner', main:'Ordenes_Refacciones',
+    genParams:()=>({sucu:randOf(['GDL','SLP','MTY','CDMX'])}),
+    text:p=>`Muestra el pedido, el vendedor y la sucursal donde trabaja, solo si el vendedor pertenece a la sucursal '${p.sucu}'.`,
+    sql:p=>`SELECT v.Num_Ped, e.Nom_Emp, s.Nom_Suc FROM DSVtaPedidos v INNER JOIN DSCatEmp e ON v.Cod_Vend=e.Cod_Emp INNER JOIN DSCatSucu s ON e.Cod_Sucu=s.Cod_Sucu WHERE s.Cod_Sucu='${p.sucu}'`},
+  {id:'l2e3', level:2, pill:'inner', main:'DSFacDocOri',
     secondary:[
-      {table:'Ordenes_Servicio', from:'Ordenes_Refacciones', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'},
-      {table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSFacFact', from:'DSFacDocOri', onFrom:'NumFac_Fact', onTo:'NumFac_Fact', type:'INNER'}
     ],
-    text:()=>'Muestra la fecha de la orden de servicio, el nombre de la refacción usada y la cantidad.',
-    sql:()=>`SELECT os.FechaServicio, r.NombreRefaccion, orf.Cantidad FROM Ordenes_Refacciones orf INNER JOIN Ordenes_Servicio os ON orf.OrdenID=os.OrdenID INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
-  {id:'l2e4', level:2, pill:'inner', main:'Ventas',
+    text:()=>'Muestra el folio del documento, el cliente y el importe total de su factura, solo documentos ya facturados.',
+    sql:()=>`SELECT d.FolDoc_DOri, c.Nom_Cte, f.ImpTot_Fact FROM DSFacDocOri d INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte INNER JOIN DSFacFact f ON d.NumFac_Fact=f.NumFac_Fact`},
+  {id:'l2e4', level:2, pill:'inner', main:'DSFacDetArtAdi',
     secondary:[
-      {table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'INNER'},
-      {table:'Cat_Agencias', from:'Ventas', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}
+      {table:'DSFacDocOri', from:'DSFacDetArtAdi', onFrom:'FolDoc_DOri', onTo:'FolDoc_DOri', type:'INNER'},
+      {table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}
     ],
-    genParams:()=>({ciudad:randOf(['Guadalajara','San Luis Potosi','Monterrey','Ciudad de Mexico'])}),
-    text:p=>`Muestra el vendedor y la ciudad de la agencia de cada venta, solo para ventas hechas en agencias de '${p.ciudad}'.`,
-    sql:p=>`SELECT e.NombreEmpleado, a.Ciudad FROM Ventas v INNER JOIN Empleados e ON v.VendedorID=e.EmpleadoID INNER JOIN Cat_Agencias a ON v.AgenciaID=a.AgenciaID WHERE a.Ciudad='${p.ciudad}'`},
-  {id:'l2e5', level:2, pill:'inner', main:'Inventario',
+    genParams:()=>({art:randOf(['REF-ACE','REF-BAL','REF-BUJ','REF-BAN','REF-LIQ','REF-FIL'])}),
+    text:p=>`Muestra el cliente y la cantidad usada del artículo '${p.art}' en cada documento de servicio.`,
+    sql:p=>`SELECT c.Nom_Cte, ad.CtdArt_AAdi FROM DSFacDetArtAdi ad INNER JOIN DSFacDocOri d ON ad.FolDoc_DOri=d.FolDoc_DOri INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte WHERE ad.Cod_Art='${p.art}'`},
+  {id:'l2e5', level:2, pill:'inner', main:'DSExtGtaXVin',
     secondary:[
-      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'},
-      {table:'Cat_Marcas', from:'Cat_Modelos', onFrom:'MarcaID', onTo:'MarcaID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSExtGtaXVin', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSCatEmp', from:'DSExtGtaXVin', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'INNER'}
     ],
-    genParams:()=>({marca:randOf(['Toyota','Honda','Kia','Lexus','BYD'])}),
-    text:p=>`Muestra el VIN, el modelo y el precio de cada unidad de la marca '${p.marca}'.`,
-    sql:p=>`SELECT i.VIN, m.NombreModelo, i.Precio FROM Inventario i INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID INNER JOIN Cat_Marcas ma ON m.MarcaID=ma.MarcaID WHERE ma.NombreMarca='${p.marca}'`},
-  {id:'l2e6', level:2, pill:'inner', main:'Ordenes_Servicio',
+    text:()=>'Muestra el número de póliza, el cliente y el vendedor que vendió la garantía (solo garantías con vendedor registrado).',
+    sql:()=>`SELECT g.Numero_Pol, c.Nom_Cte, e.Nom_Emp FROM DSExtGtaXVin g INNER JOIN DSCatCtes c ON g.Cod_Cte=c.Cod_Cte INNER JOIN DSCatEmp e ON g.Cod_Vend=e.Cod_Emp`},
+  {id:'l2e6', level:2, pill:'inner', main:'DSVtaCotiza',
     secondary:[
-      {table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSVtaCotiza', onFrom:'Cod_Pros', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSCatModelos', from:'DSVtaCotiza', onFrom:'Cod_Mod', onTo:'Cod_CMod', type:'INNER'}
     ],
-    genParams:()=>({ciudad:randOf(['Guadalajara','San Luis Potosi','Monterrey','Ciudad de Mexico'])}),
-    text:p=>`Muestra el nombre del cliente, su ciudad y el empleado que lo atendió, solo para clientes de '${p.ciudad}'.`,
-    sql:p=>`SELECT cl.NombreCompleto, cl.Ciudad, e.NombreEmpleado FROM Ordenes_Servicio os INNER JOIN Clientes cl ON os.ClienteID=cl.ClienteID INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID WHERE cl.Ciudad='${p.ciudad}'`},
-  {id:'l2e7', level:2, pill:'inner', main:'Ventas',
-    secondary:[
-      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'}
-    ],
-    genParams:()=>({color:randOf(['Blanco','Rojo','Gris','Negro','Azul','Plata'])}),
-    text:p=>`Muestra el nombre del cliente, el color del auto comprado y el monto, solo para autos de color '${p.color}'.`,
-    sql:p=>`SELECT c.NombreCompleto, i.Color, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID WHERE i.Color='${p.color}'`},
-  {id:'l2e8', level:2, pill:'inner', main:'Cotizaciones',
-    secondary:[
-      {table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'},
-      {table:'Cat_Modelos', from:'Cotizaciones', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
-    ],
-    genParams:()=>({anio:randOf([2023,2024,2025])}),
-    text:p=>`Muestra el nombre del empleado que cotizó, el modelo cotizado y el monto estimado, solo para modelos del año ${p.anio}.`,
-    sql:p=>`SELECT e.NombreEmpleado, m.NombreModelo, co.MontoEstimado FROM Cotizaciones co INNER JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID INNER JOIN Cat_Modelos m ON co.ModeloID=m.ModeloID WHERE m.Anio=${p.anio}`},
-  {id:'l2e9', level:2, pill:'inner', main:'Pagos',
-    secondary:[
-      {table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'INNER'},
-      {table:'Facturas', from:'Pagos', onFrom:'FacturaID', onTo:'FacturaID', type:'INNER'}
-    ],
-    text:()=>'Muestra el monto pagado, el método de pago y el monto de la factura correspondiente de cada pago.',
-    sql:()=>`SELECT p.MontoPagado, mp.NombreMetodo, f.MontoFacturado FROM Pagos p INNER JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID INNER JOIN Facturas f ON p.FacturaID=f.FacturaID`},
-  {id:'l2e10', level:2, pill:'inner', main:'Garantias',
-    secondary:[
-      {table:'Ventas', from:'Garantias', onFrom:'VentaID', onTo:'VentaID', type:'INNER'},
-      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}
-    ],
-    genParams:()=>({estatus:randOf(['Vigente','Vencida'])}),
-    text:p=>`Muestra el nombre del cliente y la fecha de fin de garantía, solo para garantías con estatus '${p.estatus}'.`,
-    sql:p=>`SELECT cl.NombreCompleto, g.FechaFin FROM Garantias g INNER JOIN Ventas v ON g.VentaID=v.VentaID INNER JOIN Clientes cl ON v.ClienteID=cl.ClienteID WHERE g.Estatus='${p.estatus}'`},
+    genParams:()=>({mod:randOf(['HLX','COR','RAV','CIV','CRV','RIO','SPT','SEA','ESX','MNX'])}),
+    text:p=>`Muestra el nombre del cliente prospecto y el modelo cotizado, solo para el modelo '${p.mod}'.`,
+    sql:p=>`SELECT c.Nom_Cte, m.Desc_CMod FROM DSVtaCotiza co INNER JOIN DSCatCtes c ON co.Cod_Pros=c.Cod_Cte INNER JOIN DSCatModelos m ON co.Cod_Mod=m.Cod_CMod WHERE m.Cod_CMod='${p.mod}'`},
 
-  // NIVEL 3 — LEFT JOIN (8)
-  {id:'l3e1', level:3, pill:'left', main:'Clientes',
-    secondary:[{table:'Ventas', from:'Clientes', onFrom:'ClienteID', onTo:'ClienteID', type:'LEFT'}],
-    text:()=>'Muestra todos los clientes y el VentaID de sus compras (NULL si nunca han comprado).',
-    sql:()=>`SELECT c.NombreCompleto, v.VentaID FROM Clientes c LEFT JOIN Ventas v ON c.ClienteID=v.ClienteID`},
-  {id:'l3e2', level:3, pill:'left', main:'Ventas',
-    secondary:[{table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'LEFT'}],
-    text:()=>'Muestra cada venta y el nombre del vendedor (NULL si la venta no tiene vendedor asignado).',
-    sql:()=>`SELECT v.VentaID, e.NombreEmpleado FROM Ventas v LEFT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
-  {id:'l3e3', level:3, pill:'left', main:'Ventas',
-    secondary:[{table:'Garantias', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'LEFT'}],
-    text:()=>'Encuentra las ventas que NO tienen garantía registrada.',
-    sql:()=>`SELECT v.VentaID FROM Ventas v LEFT JOIN Garantias g ON v.VentaID=g.VentaID WHERE g.GarantiaID IS NULL`},
-  {id:'l3e4', level:3, pill:'left', main:'Inventario',
-    secondary:[{table:'Ventas', from:'Inventario', onFrom:'InventarioID', onTo:'InventarioID', type:'LEFT'}],
+  // NIVEL 3 — LEFT JOIN (6)
+  {id:'l3e1', level:3, pill:'left', main:'DSCatCtes',
+    secondary:[{table:'DSVtaPedidos', from:'DSCatCtes', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'LEFT'}],
+    text:()=>'Muestra todos los clientes y el Num_Ped de sus pedidos (NULL si nunca han comprado).',
+    sql:()=>`SELECT c.Nom_Cte, v.Num_Ped FROM DSCatCtes c LEFT JOIN DSVtaPedidos v ON c.Cod_Cte=v.Cod_Cte`},
+  {id:'l3e2', level:3, pill:'left', main:'DSVtaPedidos',
+    secondary:[{table:'DSCatEmp', from:'DSVtaPedidos', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'LEFT'}],
+    text:()=>'Muestra cada pedido y el nombre del vendedor (NULL si el pedido no tiene vendedor asignado).',
+    sql:()=>`SELECT v.Num_Ped, e.Nom_Emp FROM DSVtaPedidos v LEFT JOIN DSCatEmp e ON v.Cod_Vend=e.Cod_Emp`},
+  {id:'l3e3', level:3, pill:'left', main:'DSInvProdSer',
+    secondary:[{table:'DSVtaPedidos', from:'DSInvProdSer', onFrom:'NumSer_PSer', onTo:'VinAut_Ped', type:'LEFT'}],
     text:()=>'Encuentra las unidades de inventario que nunca se han vendido (siguen en stock).',
-    sql:()=>`SELECT i.VIN FROM Inventario i LEFT JOIN Ventas v ON i.InventarioID=v.InventarioID WHERE v.VentaID IS NULL`},
-  {id:'l3e5', level:3, pill:'left', main:'Empleados',
-    secondary:[{table:'Ventas', from:'Empleados', onFrom:'EmpleadoID', onTo:'VendedorID', type:'LEFT'}],
-    text:()=>'Muestra cada empleado y el VentaID de las ventas que ha hecho (NULL si nunca ha vendido).',
-    sql:()=>`SELECT e.NombreEmpleado, v.VentaID FROM Empleados e LEFT JOIN Ventas v ON e.EmpleadoID=v.VendedorID`},
-  {id:'l3e6', level:3, pill:'left', main:'Ventas',
-    secondary:[{table:'Facturas', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'LEFT'}],
-    text:()=>'Encuentra las ventas que todavía no tienen factura generada.',
-    sql:()=>`SELECT v.VentaID FROM Ventas v LEFT JOIN Facturas f ON v.VentaID=f.VentaID WHERE f.FacturaID IS NULL`},
-  {id:'l3e7', level:3, pill:'left', main:'Facturas',
-    secondary:[{table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'LEFT'}],
-    text:()=>'Encuentra las facturas que aún no se han pagado.',
-    sql:()=>`SELECT f.FacturaID FROM Facturas f LEFT JOIN Pagos p ON f.FacturaID=p.FacturaID WHERE p.PagoID IS NULL`},
-  {id:'l3e8', level:3, pill:'left', main:'Cotizaciones',
-    secondary:[{table:'Ventas', from:'Cotizaciones', onFrom:'ClienteID', onTo:'ClienteID', type:'LEFT'}],
-    text:()=>'Encuentra las cotizaciones de clientes que nunca llegaron a comprar (para hacerles seguimiento).',
-    sql:()=>`SELECT co.CotizacionID FROM Cotizaciones co LEFT JOIN Ventas v ON co.ClienteID=v.ClienteID WHERE v.VentaID IS NULL`},
+    sql:()=>`SELECT p.NumSer_PSer FROM DSInvProdSer p LEFT JOIN DSVtaPedidos v ON p.NumSer_PSer=v.VinAut_Ped WHERE v.Num_Ped IS NULL`},
+  {id:'l3e4', level:3, pill:'left', main:'DSFacDocOri',
+    secondary:[{table:'DSFacFact', from:'DSFacDocOri', onFrom:'NumFac_Fact', onTo:'NumFac_Fact', type:'LEFT'}],
+    text:()=>'Encuentra los documentos de servicio que todavía no se han facturado.',
+    sql:()=>`SELECT d.FolDoc_DOri FROM DSFacDocOri d LEFT JOIN DSFacFact f ON d.NumFac_Fact=f.NumFac_Fact WHERE f.NumFac_Fact IS NULL`},
+  {id:'l3e5', level:3, pill:'left', main:'DSVtaPedidos',
+    secondary:[{table:'DSExtGtaXVin', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'AutVIN', type:'LEFT'}],
+    text:()=>'Encuentra los pedidos cuya unidad NO tiene garantía registrada.',
+    sql:()=>`SELECT v.Num_Ped FROM DSVtaPedidos v LEFT JOIN DSExtGtaXVin g ON v.VinAut_Ped=g.AutVIN WHERE g.Numero_Pol IS NULL`},
+  {id:'l3e6', level:3, pill:'left', main:'DSVtaCotiza',
+    secondary:[{table:'DSVtaPedidos', from:'DSVtaCotiza', onFrom:'Cod_Pros', onTo:'Cod_Cte', type:'LEFT'}],
+    text:()=>'Encuentra las cotizaciones de clientes que nunca llegaron a comprar (para darles seguimiento).',
+    sql:()=>`SELECT co.Num_Cot FROM DSVtaCotiza co LEFT JOIN DSVtaPedidos v ON co.Cod_Pros=v.Cod_Cte WHERE v.Num_Ped IS NULL`},
 
-  // NIVEL 4 — RIGHT / FULL OUTER (6)
-  {id:'l4e1', level:4, pill:'right', main:'Ventas',
-    secondary:[{table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'RIGHT'}],
-    text:()=>'Muestra TODOS los empleados y su VentaID cuando exista (incluye a los que nunca han vendido). Parte de Ventas y usa RIGHT JOIN.',
-    sql:()=>`SELECT e.NombreEmpleado, v.VentaID FROM Ventas v RIGHT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
-  {id:'l4e2', level:4, pill:'full', main:'Ventas',
-    secondary:[{table:'Facturas', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'FULL'}],
-    text:()=>'Auditoría: encuentra ventas sin factura y facturas sin venta asociada (VentaID o FacturaID nulo).',
-    sql:()=>`SELECT v.VentaID, f.FacturaID FROM Ventas v FULL OUTER JOIN Facturas f ON v.VentaID=f.VentaID WHERE v.VentaID IS NULL OR f.FacturaID IS NULL`},
-  {id:'l4e3', level:4, pill:'right', main:'Ordenes_Servicio',
-    secondary:[{table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'RIGHT'}],
-    text:()=>'Muestra TODOS los clientes y su OrdenID de servicio cuando exista (incluye a los que nunca han llevado su auto a servicio). Parte de Ordenes_Servicio y usa RIGHT JOIN.',
-    sql:()=>`SELECT c.NombreCompleto, os.OrdenID FROM Ordenes_Servicio os RIGHT JOIN Clientes c ON os.ClienteID=c.ClienteID`},
-  {id:'l4e4', level:4, pill:'right', main:'Ventas',
-    secondary:[{table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'RIGHT'}],
-    text:()=>'Muestra TODAS las unidades de inventario y su VentaID cuando se hayan vendido (incluye las que siguen en stock). Parte de Ventas y usa RIGHT JOIN.',
-    sql:()=>`SELECT i.VIN, v.VentaID FROM Ventas v RIGHT JOIN Inventario i ON v.InventarioID=i.InventarioID`},
-  {id:'l4e5', level:4, pill:'right', main:'Cotizaciones',
-    secondary:[{table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'RIGHT'}],
-    text:()=>'Muestra TODOS los empleados y el CotizacionID de las cotizaciones que han hecho (incluye a los que nunca han cotizado). Parte de Cotizaciones y usa RIGHT JOIN.',
-    sql:()=>`SELECT e.NombreEmpleado, co.CotizacionID FROM Cotizaciones co RIGHT JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID`},
-  {id:'l4e6', level:4, pill:'full', main:'Facturas',
-    secondary:[{table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'FULL'}],
-    text:()=>'Auditoría: encuentra facturas sin pago y pagos que no coincidan con ninguna factura.',
-    sql:()=>`SELECT f.FacturaID, p.PagoID FROM Facturas f FULL OUTER JOIN Pagos p ON f.FacturaID=p.FacturaID WHERE f.FacturaID IS NULL OR p.PagoID IS NULL`},
+  // NIVEL 4 — RIGHT / FULL OUTER (5)
+  {id:'l4e1', level:4, pill:'right', main:'DSVtaPedidos',
+    secondary:[{table:'DSCatEmp', from:'DSVtaPedidos', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los empleados y su Num_Ped cuando exista (incluye a los que nunca han vendido). Parte de DSVtaPedidos y usa RIGHT JOIN.',
+    sql:()=>`SELECT e.Nom_Emp, v.Num_Ped FROM DSVtaPedidos v RIGHT JOIN DSCatEmp e ON v.Cod_Vend=e.Cod_Emp`},
+  {id:'l4e2', level:4, pill:'right', main:'DSVtaPedidos',
+    secondary:[{table:'DSInvProdSer', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'NumSer_PSer', type:'RIGHT'}],
+    text:()=>'Muestra TODAS las unidades de inventario y su Num_Ped cuando se hayan vendido (incluye las que siguen en stock). Parte de DSVtaPedidos y usa RIGHT JOIN.',
+    sql:()=>`SELECT p.NumSer_PSer, v.Num_Ped FROM DSVtaPedidos v RIGHT JOIN DSInvProdSer p ON v.VinAut_Ped=p.NumSer_PSer`},
+  {id:'l4e3', level:4, pill:'right', main:'DSFacDocOri',
+    secondary:[{table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los clientes y su FolDoc_DOri cuando tengan (incluye a los que nunca han generado un documento de servicio). Parte de DSFacDocOri y usa RIGHT JOIN.',
+    sql:()=>`SELECT c.Nom_Cte, d.FolDoc_DOri FROM DSFacDocOri d RIGHT JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte`},
+  {id:'l4e4', level:4, pill:'full', main:'DSFacDocOri',
+    secondary:[{table:'DSFacFact', from:'DSFacDocOri', onFrom:'NumFac_Fact', onTo:'NumFac_Fact', type:'FULL'}],
+    text:()=>'Auditoría: encuentra documentos sin facturar y facturas que no estén ligadas a ningún documento de servicio.',
+    sql:()=>`SELECT d.FolDoc_DOri, f.NumFac_Fact FROM DSFacDocOri d FULL OUTER JOIN DSFacFact f ON d.NumFac_Fact=f.NumFac_Fact WHERE d.FolDoc_DOri IS NULL OR f.NumFac_Fact IS NULL`},
+  {id:'l4e5', level:4, pill:'full', main:'DSVtaPedidos',
+    secondary:[{table:'DSExtGtaXVin', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'AutVIN', type:'FULL'}],
+    text:()=>'Auditoría: encuentra pedidos sin garantía y garantías cuyo VIN no corresponda a ningún pedido registrado.',
+    sql:()=>`SELECT v.Num_Ped, g.Numero_Pol FROM DSVtaPedidos v FULL OUTER JOIN DSExtGtaXVin g ON v.VinAut_Ped=g.AutVIN WHERE v.Num_Ped IS NULL OR g.Numero_Pol IS NULL`},
 
-  // NIVEL 5 — CROSS / AUTO-JOIN (6)
-  {id:'l5e1', level:5, pill:'cross', main:'Cat_Agencias',
-    secondary:[{table:'Cat_Servicios', from:'Cat_Agencias', onFrom:null, onTo:null, type:'CROSS'}],
-    text:()=>'Genera una matriz con todas las combinaciones posibles de Agencia + Tipo de Servicio.',
-    sql:()=>`SELECT a.NombreAgencia, s.TipoServicio FROM Cat_Agencias a CROSS JOIN Cat_Servicios s`},
-  {id:'l5e2', level:5, pill:'self', main:'Empleados',
-    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'LEFT', selfJoin:true}],
-    text:()=>'Muestra el nombre de cada empleado junto con el nombre de su jefe directo (si tiene). Une Empleados consigo misma.',
-    sql:()=>`SELECT emp.NombreEmpleado AS Empleado, jefe.NombreEmpleado AS Jefe FROM Empleados emp LEFT JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID`},
-  {id:'l5e3', level:5, pill:'cross', main:'Cat_Marcas',
-    secondary:[{table:'Cat_Agencias', from:'Cat_Marcas', onFrom:null, onTo:null, type:'CROSS'}],
-    text:()=>'Genera todas las combinaciones posibles de Marca + Agencia (para planear qué marcas podría ofrecer cada sucursal).',
-    sql:()=>`SELECT ma.NombreMarca, a.NombreAgencia FROM Cat_Marcas ma CROSS JOIN Cat_Agencias a`},
-  {id:'l5e4', level:5, pill:'cross', main:'Cat_Refacciones',
-    secondary:[{table:'Cat_Servicios', from:'Cat_Refacciones', onFrom:null, onTo:null, type:'CROSS'}],
-    text:()=>'Genera una matriz de todas las combinaciones de Refacción + Tipo de Servicio.',
-    sql:()=>`SELECT r.NombreRefaccion, s.TipoServicio FROM Cat_Refacciones r CROSS JOIN Cat_Servicios s`},
-  {id:'l5e5', level:5, pill:'self', main:'Empleados',
-    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'INNER', selfJoin:true}],
-    text:()=>'Muestra solo los empleados que SÍ tienen un jefe asignado, junto con el nombre de su jefe (usa INNER en vez de LEFT).',
-    sql:()=>`SELECT emp.NombreEmpleado AS Empleado, jefe.NombreEmpleado AS Jefe FROM Empleados emp INNER JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID`},
-  {id:'l5e6', level:5, pill:'self', main:'Empleados',
-    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'LEFT', selfJoin:true}],
-    text:()=>'Encuentra los empleados que NO tienen jefe asignado (los gerentes de más alto nivel).',
-    sql:()=>`SELECT emp.NombreEmpleado FROM Empleados emp LEFT JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID WHERE jefe.EmpleadoID IS NULL`},
+  // NIVEL 5 — CROSS / AUTO-JOIN (5)
+  {id:'l5e1', level:5, pill:'cross', main:'DSCatSucu',
+    secondary:[{table:'DSSerCatSer', from:'DSCatSucu', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera una matriz con todas las combinaciones posibles de Sucursal + Servicio.',
+    sql:()=>`SELECT s.Nom_Suc, sv.Desc_Serv FROM DSCatSucu s CROSS JOIN DSSerCatSer sv`},
+  {id:'l5e2', level:5, pill:'cross', main:'DSInvMarcas',
+    secondary:[{table:'DSCatSucu', from:'DSInvMarcas', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera todas las combinaciones posibles de Marca + Sucursal (para planear qué marcas podría ofrecer cada sucursal).',
+    sql:()=>`SELECT m.Desc_Mar, s.Nom_Suc FROM DSInvMarcas m CROSS JOIN DSCatSucu s`},
+  {id:'l5e3', level:5, pill:'cross', main:'DSCatSucu',
+    secondary:[{table:'DSCajTpFPag', from:'DSCatSucu', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera una matriz de Sucursal + Forma de pago disponible.',
+    sql:()=>`SELECT s.Nom_Suc, tf.Desc_Tfp FROM DSCatSucu s CROSS JOIN DSCajTpFPag tf`},
+  {id:'l5e4', level:5, pill:'self', main:'DSCatEmp',
+    secondary:[{table:'DSCatEmp', from:'DSCatEmp', onFrom:'Cod_Dpto', onTo:'Cod_Dpto', type:'INNER', selfJoin:true}],
+    text:()=>'Muestra parejas de empleados que trabajan en el mismo departamento (Cod_Dpto), sin contar a un empleado consigo mismo. Une DSCatEmp con ella misma.',
+    sql:()=>`SELECT e1.Nom_Emp AS Empleado, e2.Nom_Emp AS Companero FROM DSCatEmp e1 INNER JOIN DSCatEmp e2 ON e1.Cod_Dpto=e2.Cod_Dpto AND e1.Cod_Emp<>e2.Cod_Emp`},
+  {id:'l5e5', level:5, pill:'cross', main:'DSSerCatSer',
+    secondary:[{table:'DSCajTpFPag', from:'DSSerCatSer', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera todas las combinaciones de Servicio + Forma de pago (para armar un catálogo de promociones).',
+    sql:()=>`SELECT sv.Desc_Serv, tf.Desc_Tfp FROM DSSerCatSer sv CROSS JOIN DSCajTpFPag tf`},
 
   // NIVEL 6 — Tabla puente y combinaciones (6)
-  {id:'l6e1', level:6, pill:'inner', main:'Ordenes_Servicio',
+  {id:'l6e1', level:6, pill:'inner', main:'DSFacDetArtAdi',
+    secondary:[{table:'DSInvArt', from:'DSFacDetArtAdi', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'}],
+    text:()=>'Muestra la descripción del artículo usado y la cantidad, para cada detalle de artículo adicional.',
+    sql:()=>`SELECT a.Desc_Art, ad.CtdArt_AAdi FROM DSFacDetArtAdi ad INNER JOIN DSInvArt a ON ad.Cod_Art=a.Cod_Art`},
+  {id:'l6e2', level:6, pill:'inner', main:'DSInvArt',
+    secondary:[{table:'DSFacDetArtAdi', from:'DSInvArt', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'}],
+    text:()=>'¿Cuántas unidades en total se han usado de cada artículo (suma de CtdArt_AAdi)? Muestra la descripción del artículo.',
+    sql:()=>`SELECT a.Desc_Art, SUM(ad.CtdArt_AAdi) AS TotalUsado FROM DSInvArt a INNER JOIN DSFacDetArtAdi ad ON a.Cod_Art=ad.Cod_Art GROUP BY a.Cod_Art, a.Desc_Art`},
+  {id:'l6e3', level:6, pill:'left', main:'DSFacDocOri',
     secondary:[
-      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSFacFact', from:'DSFacDocOri', onFrom:'NumFac_Fact', onTo:'NumFac_Fact', type:'LEFT'}
     ],
-    text:()=>'Para cada orden de servicio, cuenta cuántas refacciones distintas se usaron (usa GROUP BY).',
-    sql:()=>`SELECT os.OrdenID, COUNT(DISTINCT orf.RefaccionID) AS NumRefacciones FROM Ordenes_Servicio os INNER JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID GROUP BY os.OrdenID`},
-  {id:'l6e2', level:6, pill:'left', main:'Facturas',
+    text:()=>'Muestra cada documento con su cliente y el importe de su factura si ya está facturado (NULL si no). Combina INNER y LEFT.',
+    sql:()=>`SELECT c.Nom_Cte, d.FolDoc_DOri, f.ImpTot_Fact FROM DSFacDocOri d INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte LEFT JOIN DSFacFact f ON d.NumFac_Fact=f.NumFac_Fact`},
+  {id:'l6e4', level:6, pill:'left', main:'DSVtaPedidos',
     secondary:[
-      {table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'LEFT'},
-      {table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'LEFT'}
+      {table:'DSCatCtes', from:'DSVtaPedidos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSInvProdSer', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'NumSer_PSer', type:'INNER'},
+      {table:'DSInvArt', from:'DSInvProdSer', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'},
+      {table:'DSCatEmp', from:'DSVtaPedidos', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'LEFT'}
     ],
-    text:()=>'Muestra cada factura con el método de pago usado (NULL si todavía no se ha pagado).',
-    sql:()=>`SELECT f.FacturaID, mp.NombreMetodo FROM Facturas f LEFT JOIN Pagos p ON f.FacturaID=p.FacturaID LEFT JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID`},
-  {id:'l6e3', level:6, pill:'inner', main:'Ordenes_Servicio',
+    text:()=>'Reporte completo: para cada pedido con unidad asignada, muestra cliente, artículo vendido y vendedor (NULL si no tiene vendedor asignado).',
+    sql:()=>`SELECT c.Nom_Cte, a.Desc_Art, e.Nom_Emp FROM DSVtaPedidos v INNER JOIN DSCatCtes c ON v.Cod_Cte=c.Cod_Cte INNER JOIN DSInvProdSer p ON v.VinAut_Ped=p.NumSer_PSer INNER JOIN DSInvArt a ON p.Cod_Art=a.Cod_Art LEFT JOIN DSCatEmp e ON v.Cod_Vend=e.Cod_Emp`},
+  {id:'l6e5', level:6, pill:'left', main:'DSFacDocOri',
     secondary:[
-      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'},
-      {table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+      {table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSFacDetArtAdi', from:'DSFacDocOri', onFrom:'FolDoc_DOri', onTo:'FolDoc_DOri', type:'LEFT'}
     ],
-    text:()=>'Muestra, para cada orden de servicio, el nombre de cada refacción usada (una fila por refacción).',
-    sql:()=>`SELECT os.OrdenID, r.NombreRefaccion FROM Ordenes_Servicio os INNER JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
-  {id:'l6e4', level:6, pill:'inner', main:'Cat_Refacciones',
+    text:()=>'Muestra cliente, folio del documento y cuántas refacciones adicionales se usaron (0 si ninguna). Usa GROUP BY.',
+    sql:()=>`SELECT c.Nom_Cte, d.FolDoc_DOri, COUNT(ad.Cod_Art) AS NumRefacciones FROM DSFacDocOri d INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte LEFT JOIN DSFacDetArtAdi ad ON d.FolDoc_DOri=ad.FolDoc_DOri GROUP BY d.FolDoc_DOri, c.Nom_Cte`},
+  {id:'l6e6', level:6, pill:'inner', main:'DSExtGtaXVin',
     secondary:[
-      {table:'Ordenes_Refacciones', from:'Cat_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+      {table:'DSInvProdSer', from:'DSExtGtaXVin', onFrom:'AutVIN', onTo:'NumSer_PSer', type:'INNER'},
+      {table:'DSCatCtes', from:'DSExtGtaXVin', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}
     ],
-    text:()=>'¿Cuántas veces en total se ha usado cada refacción (suma de Cantidad)? Muestra el nombre de la refacción.',
-    sql:()=>`SELECT r.NombreRefaccion, SUM(orf.Cantidad) AS TotalUsado FROM Cat_Refacciones r INNER JOIN Ordenes_Refacciones orf ON r.RefaccionID=orf.RefaccionID GROUP BY r.RefaccionID, r.NombreRefaccion`},
-  {id:'l6e5', level:6, pill:'inner', main:'Ventas',
-    secondary:[
-      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'},
-      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'},
-      {table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'LEFT'}
-    ],
-    text:()=>'Reporte completo: para cada venta muestra cliente, modelo y vendedor (NULL si no tiene vendedor asignado). Combina INNER y LEFT en la misma consulta.',
-    sql:()=>`SELECT c.NombreCompleto, m.NombreModelo, e.NombreEmpleado FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID LEFT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
-  {id:'l6e6', level:6, pill:'left', main:'Ordenes_Servicio',
-    secondary:[
-      {table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
-      {table:'Cat_Servicios', from:'Ordenes_Servicio', onFrom:'ServicioID', onTo:'ServicioID', type:'INNER'},
-      {table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'},
-      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'LEFT'}
-    ],
-    text:()=>'Muestra cliente, tipo de servicio, empleado y cuántas refacciones se usaron por orden (0 si no usó ninguna).',
-    sql:()=>`SELECT cl.NombreCompleto, s.TipoServicio, e.NombreEmpleado, COUNT(orf.OrdenRefaccionID) AS NumRefacciones FROM Ordenes_Servicio os INNER JOIN Clientes cl ON os.ClienteID=cl.ClienteID INNER JOIN Cat_Servicios s ON os.ServicioID=s.ServicioID INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID LEFT JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID GROUP BY os.OrdenID, cl.NombreCompleto, s.TipoServicio, e.NombreEmpleado`}
+    text:()=>'Muestra el número de póliza, el VIN de la unidad y el nombre del cliente de cada garantía.',
+    sql:()=>`SELECT g.Numero_Pol, p.NumSer_PSer, c.Nom_Cte FROM DSExtGtaXVin g INNER JOIN DSInvProdSer p ON g.AutVIN=p.NumSer_PSer INNER JOIN DSCatCtes c ON g.Cod_Cte=c.Cod_Cte`}
 ];
 exercises.forEach(e=>{ if(!e.genParams) e.genParams = ()=>({}); });
 
@@ -882,7 +851,7 @@ initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10
   buildFreeTablePicker();
   renderLevelRow();
   renderExMiniList();
-  document.getElementById('editor').value = 'SELECT * FROM Clientes;';
+  document.getElementById('editor').value = 'SELECT * FROM DSCatCtes;';
 }).catch(err=>{
   document.querySelector('main').innerHTML = '<div class="card"><h2>No se pudo cargar el motor SQL</h2><p>Revisa tu conexión a internet (esta app necesita descargar sql.js la primera vez). Error: '+err+'</p></div>';
 });
@@ -920,7 +889,7 @@ function buildTableGrid(){
     const b = document.createElement('button');
     b.className = 'table-btn';
     b.dataset.name = t.toLowerCase();
-    b.innerHTML = `<b>${t}</b><small>${tableInfo[t]}</small>`;
+    b.innerHTML = `<b>${t}</b><small>📎 ${tableInfo[t].note}</small><small style="opacity:.7;">${tableInfo[t].desc}</small>`;
     b.addEventListener('click', ()=> { previewTable(t); highlightMapNode(t); });
     grid.appendChild(b);
   });
@@ -935,7 +904,10 @@ function buildTableGrid(){
 function previewTable(t){
   const cols = db.exec(`PRAGMA table_info(${t})`)[0];
   const data = db.exec(`SELECT * FROM ${t} LIMIT 8`)[0];
-  let html = `<div class="card"><h3>${t}</h3><p class="muted">Columnas: ${cols.values.map(r=>r[1]+' ('+r[2]+')').join(', ')}</p>`;
+  const info = tableInfo[t];
+  let html = `<div class="card"><h3>${t}</h3>`;
+  if(info) html += `<div class="ref-note">📎 ${info.note}</div>`;
+  html += `<p class="muted">Columnas: ${cols.values.map(r=>r[1]+' ('+r[2]+')').join(', ')}</p>`;
   html += renderResultTable(data);
   html += '</div>';
   document.getElementById('tablePreview').innerHTML = html;
@@ -993,12 +965,12 @@ function buildMap(){
 
   Object.keys(nodePos).forEach(name=>{
     const pos = nodePos[name];
-    const isFact = tableInfo[name].startsWith('Hechos') || tableInfo[name].startsWith('Tabla puente');
+    const isFact = tableInfo[name].desc.startsWith('Hechos') || tableInfo[name].desc.startsWith('Tabla puente');
     const g = document.createElementNS('http://www.w3.org/2000/svg','g');
     g.classList.add('node'); g.dataset.name = name; g.style.cursor='pointer';
     const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    rect.setAttribute('x', pos.x-72); rect.setAttribute('y', pos.y-26);
-    rect.setAttribute('width', 144); rect.setAttribute('height', 42); rect.setAttribute('rx', 8);
+    rect.setAttribute('x', pos.x-88); rect.setAttribute('y', pos.y-26);
+    rect.setAttribute('width', 176); rect.setAttribute('height', 42); rect.setAttribute('rx', 8);
     rect.setAttribute('fill', isFact ? '#213a24' : '#1c2438');
     rect.setAttribute('stroke', isFact ? '#8ee69f' : '#8eb2ff');
     rect.classList.add('nodeRect');
