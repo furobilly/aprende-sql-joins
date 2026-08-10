@@ -1,456 +1,1326 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dr. Código - Simulador DaltonSoft</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
-    <style>
-        /* Estilos Quirúrgicos */
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
-        .drawer { transition: transform 0.3s ease-in-out; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
-        
-        /* Conexiones visuales tipo Power BI */
-        .conexion-linea { border-left: 2px dashed #10b981; margin-left: 1rem; padding-left: 1rem; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Aprende JOINs — Dalton</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#161d2e; --panel2:#232c46; --border:#3a4568;
+    --text:#e7ecf7; --muted:#93a0c0; --accent:#4f8cff; --accent2:#38d996;
+    --warn:#ffb454; --bad:#ff6b6b; --code-bg:#0b0f18;
+  }
+  *{box-sizing:border-box;}
+  html{font-size:115%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,Arial,sans-serif;}
+  header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:sticky;top:0;background:var(--bg);z-index:10;}
+  header h1{font-size:1.15rem;margin:0;}
+  header h1 span{color:var(--accent);}
+  .progress-wrap{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--muted);}
+  .progress-bar{width:180px;height:10px;background:var(--panel2);border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .4s;}
+  nav{display:flex;gap:6px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap;}
+  nav button{background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.9rem;}
+  nav button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  main{padding:20px 24px;max-width:1300px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+  .card h2{margin-top:0;font-size:1.05rem;}
+  .card h3{font-size:.95rem;color:var(--accent2);}
+  code, pre{background:var(--code-bg);border-radius:6px;}
+  pre{padding:12px;overflow-x:auto;border:1px solid var(--border);font-size:.85rem;line-height:1.5;}
+  code{padding:2px 6px;font-size:.85em;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:600;margin-right:6px;}
+  .pill.inner{background:#264a2a;color:#8ee69f;}
+  .pill.left{background:#26314a;color:#8eb2ff;}
+  .pill.right{background:#4a3a26;color:#ffcf8e;}
+  .pill.full{background:#3a2646;color:#e08eff;}
+  .pill.cross{background:#462626;color:#ff8e8e;}
+  .pill.self{background:#264646;color:#8effe6;}
+  .venn{display:flex;align-items:center;gap:18px;margin:14px 0;}
+  .venn svg{flex-shrink:0;}
+  .venn .exp{flex:1;font-size:.88rem;color:var(--muted);}
+  .grid-tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;}
+  .table-btn{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:left;color:var(--text);}
+  .table-btn:hover{border-color:var(--accent);}
+  .table-btn b{color:var(--accent2);}
+  .table-btn small{color:var(--muted);display:block;margin-top:4px;}
+  table.result{border-collapse:collapse;width:100%;font-size:.82rem;margin-top:10px;}
+  table.result th, table.result td{border:1px solid var(--border);padding:5px 9px;text-align:left;white-space:nowrap;}
+  table.result th{background:var(--panel2);color:var(--accent2);position:sticky;top:0;}
+  table.result tr:nth-child(even) td{background:#141a2a;}
+  .scrollx{overflow:auto;max-height:340px;border:1px solid var(--border);border-radius:8px;}
+  textarea#editor{width:100%;min-height:110px;background:var(--code-bg);color:#c9f7c9;font-family:Consolas,Monaco,monospace;font-size:.92rem;border:1px solid var(--border);border-radius:8px;padding:12px;resize:vertical;}
+  .btn{background:var(--accent);border:none;color:#fff;padding:9px 16px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;}
+  .btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
+  .btn.good{background:var(--accent2);color:#0b1a12;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btnrow{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;}
+  .feedback{padding:12px 14px;border-radius:8px;margin-top:10px;font-size:.88rem;white-space:pre-wrap;}
+  .feedback.ok{background:#173a24;border:1px solid var(--accent2);color:#a9f5c4;}
+  .feedback.bad{background:#3a1717;border:1px solid var(--bad);color:#ffb3b3;}
+  .feedback.err{background:#3a2a17;border:1px solid var(--warn);color:#ffdca8;}
+  .hint-box{background:var(--panel2);border:1px dashed var(--border);border-radius:8px;padding:10px 12px;font-size:.85rem;color:var(--muted);margin-top:8px;}
+  .diagram-wrap{overflow-x:auto;}
+  .muted{color:var(--muted);}
+  .badge{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:.72rem;color:var(--muted);margin-left:6px;}
+  /* niveles */
+  .level-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .level-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.83rem;position:relative;}
+  .level-btn.active{border-color:var(--accent);background:#1c2c4a;}
+  .level-btn.locked{opacity:.45;cursor:not-allowed;}
+  .level-btn .lv-progress{display:block;font-size:.68rem;color:var(--muted);margin-top:2px;}
+  .ex-mini-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .ex-mini{background:#232c46;border:1px solid #3a4568;border-radius:8px;padding:9px 14px;font-size:.85rem;cursor:pointer;color:var(--text);font-weight:500;}
+  .ex-mini:hover{border-color:var(--accent);}
+  .ex-mini.active{border-color:var(--accent);background:#1c2c4a;box-shadow:0 0 0 1px var(--accent);}
+  .ex-mini.done{background:#123524;border-color:var(--accent2);color:#c3f7d6;}
+  .ex-mini.done::after{content:" ✅";}
+  /* wizard */
+  .wiz-step{display:none;}
+  .wiz-step.active{display:block;}
+  .wiz-progress{display:flex;gap:4px;margin-bottom:14px;}
+  .wiz-dot{flex:1;height:6px;border-radius:4px;background:var(--panel2);border:1px solid var(--border);}
+  .wiz-dot.done{background:var(--accent2);border-color:var(--accent2);}
+  .wiz-dot.current{background:var(--accent);border-color:var(--accent);}
+  .opt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .opt-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:8px;cursor:pointer;font-size:.85rem;text-align:left;}
+  .opt-btn:hover{border-color:var(--accent);}
+  .opt-btn.picked{border-color:var(--accent);background:#1c2c4a;}
+  .opt-btn.correct{border-color:var(--accent2);background:#173a24;}
+  .opt-btn.wrong{border-color:var(--bad);background:#3a1717;}
+  .alias-row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:.87rem;}
+  .alias-row input{width:80px;background:var(--code-bg);border:1px solid var(--border);color:#c9f7c9;border-radius:6px;padding:6px 8px;font-family:Consolas,Monaco,monospace;}
+  .skeleton{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:Consolas,Monaco,monospace;font-size:.85rem;color:#c9f7c9;white-space:pre-wrap;margin-top:10px;}
+  .mode-toggle{display:flex;gap:8px;margin-bottom:14px;}
+  /* referencia de columnas */
+  .colref-wrap{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 18px;}
+  .colref-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:170px;flex:1;}
+  .colref-card b{color:var(--accent2);font-size:.85rem;}
+  .colref-card .cols{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
+  .colref-card .cols span{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.72rem;font-family:Consolas,Monaco,monospace;color:#c9f7c9;}
+  .table-pick-wrap{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;}
+  .table-pick{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:6px 11px;border-radius:16px;cursor:pointer;font-size:.78rem;}
+  .table-pick.picked{border-color:var(--accent);background:#1c2c4a;color:var(--accent2);}
+</style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <header class="bg-slate-900 border-b border-slate-700 p-4 sticky top-0 z-40 flex items-center justify-between shadow-lg">
-        <div class="flex items-center gap-3">
-            <span class="text-2xl">🩺</span>
-            <div>
-                <h1 class="font-bold text-lg text-emerald-400 leading-tight">Dr. Código ERP Simulator</h1>
-                <p class="text-[11px] text-slate-400">Entrenamiento con Base de Datos DaltonSoft</p>
-            </div>
+<header>
+  <h1>🔗 Aprende <span>JOINs</span> — Base práctica Dalton</h1>
+  <div class="progress-wrap">
+    <span id="progressLabel">0/0 ejercicios</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-view="teoria">📖 Teoría</button>
+  <button class="tab-btn" data-view="tablas">🗂️ Tablas y mapa</button>
+  <button class="tab-btn" data-view="practica">🧠 Practicar</button>
+</nav>
+
+<main>
+
+  <!-- ================= TEORIA ================= -->
+  <section id="view-teoria" class="view active">
+
+    <div class="card">
+      <h2>¿Por qué existen los JOINs?</h2>
+      <p>Imagina que tienes dos hojas de Excel separadas: una con tus <b>Clientes</b> y otra con tus <b>Ventas</b>. La hoja de Ventas no tiene el nombre del cliente, solo un número (<code>ClienteID</code>) que apunta a la otra hoja.</p>
+      <p>Un <b>JOIN</b> es la instrucción que le dice a SQL: <i>"pega estas dos hojas usando esta columna en común"</i>, para que en un solo resultado veas el nombre del cliente <b>junto con</b> su venta.</p>
+      <p class="muted">La columna en común normalmente es un <b>ID</b>: la tabla "principal" tiene su <code>ClienteID</code> como identificador único (Primary Key / PK), y la tabla de Ventas guarda ese mismo número como referencia (Foreign Key / FK). El JOIN conecta PK con FK.</p>
+    </div>
+
+    <div class="card">
+      <h2>Cómo decidir tu tabla principal (la lógica que más importa)</h2>
+      <p>Antes de escribir una sola línea de SQL, hazte estas preguntas en orden — es el mismo proceso que necesitas para leer los stored procedures de tu trabajo. En <b>Practicar → Entrenador de lógica</b> te lo voy a preguntar exactamente así, paso a paso:</p>
+      <ol>
+        <li><b>¿Qué pregunta me están haciendo?</b> Identifica el sujeto real del reporte. "¿Cuánto facturó cada agencia?" → el resultado gira alrededor de <b>Agencia</b>. "¿Qué clientes no han comprado?" → gira alrededor de <b>Cliente</b>.</li>
+        <li><b>¿Qué tabla tiene una fila por cada "cosa" que quiero contar o listar?</b> Esa es tu tabla principal, la que va en el <code>FROM</code>.</li>
+        <li><b>Regla práctica de Dalton:</b> las tablas de <b>hechos</b> (Ventas, Facturas, Órdenes de Servicio, Pagos — cosas que "pasan" y tienen fecha/monto) casi siempre son la tabla principal. Las tablas de <b>catálogo</b> (Clientes, Modelos, Agencias, Servicios — cosas que "son", listas fijas) casi siempre son las que unes con <code>JOIN</code>.</li>
+        <li><b>¿Qué tablas secundarias necesito?</b> Solo las que tienen el dato que te piden mostrar o filtrar. Si no vas a mostrar ni filtrar nada de una tabla, no la unas — cada JOIN de más es una oportunidad de duplicar filas por accidente.</li>
+        <li><b>¿Cuál es el campo de unión (ON)?</b> Busca el FK en tu tabla principal que apunte al PK de la tabla secundaria. Casi siempre se llaman igual o muy parecido (<code>ClienteID</code> en ambas).</li>
+        <li><b>¿Qué tipo de JOIN?</b> Si el dato es obligatorio (no debería faltar) → INNER. Si quieres conservar todos los de tu tabla principal aunque no tengan pareja → LEFT.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Los alias (AS) y la estructura de una consulta profesional</h2>
+      <p>Un <b>alias</b> es un apodo corto para una tabla, para no repetir el nombre completo en cada línea. Buenas prácticas:</p>
+      <ul>
+        <li>Usa 1-3 letras que recuerden el nombre de la tabla: <code>Ventas AS v</code>, <code>Clientes AS c</code>, <code>Empleados AS e</code>.</li>
+        <li>Si dos tablas empiezan igual (ej. <code>Cat_Modelos</code> y <code>Cat_Marcas</code>), usa algo distinguible: <code>m</code> y <code>ma</code>, o <code>mod</code> y <code>mar</code>.</li>
+        <li>Usa el alias en <b>todas</b> las columnas ambiguas: <code>v.ClienteID</code>, no solo <code>ClienteID</code>, para que quede claro de qué tabla viene cada dato.</li>
+      </ul>
+      <p>El <b>orden</b> estándar de una consulta con JOIN, de arriba a abajo:</p>
+      <pre>SELECT   columnas_que_quiero_ver
+FROM     tabla_principal AS alias1
+JOIN     tabla_secundaria AS alias2
+    ON   alias1.campo_comun = alias2.campo_comun
+WHERE    filtros_de_fila
+GROUP BY columnas_para_agrupar
+HAVING   filtros_de_grupo
+ORDER BY columnas_para_ordenar;</pre>
+      <p class="muted">No todas las cláusulas son obligatorias siempre, pero cuando aparecen, siempre van en <b>este orden</b>.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill inner">INNER JOIN</span> Solo lo que coincide en ambas</h2>
+      <div class="venn">
+        <svg width="180" height="110" viewBox="0 0 180 110">
+          <circle cx="70" cy="55" r="45" fill="#264a2a" fill-opacity="0.5" stroke="#8ee69f"/>
+          <circle cx="110" cy="55" r="45" fill="#264a2a" fill-opacity="0.5" stroke="#8ee69f"/>
+          <circle cx="90" cy="55" r="20" fill="#8ee69f" fill-opacity="0.9"/>
+          <text x="35" y="30" fill="#c9f7c9" font-size="11">Clientes</text>
+          <text x="120" y="30" fill="#c9f7c9" font-size="11">Ventas</text>
+        </svg>
+        <div class="exp">Devuelve <b>solo</b> las filas que tienen coincidencia en las dos tablas. Si un cliente nunca compró, <b>no aparece</b>. Es el JOIN por defecto y el más usado.</div>
+      </div>
+      <pre>SELECT c.NombreCompleto, v.MontoTotal
+FROM Ventas AS v
+INNER JOIN Clientes AS c
+    ON v.ClienteID = c.ClienteID;</pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill left">LEFT JOIN</span> Todo de la izquierda, aunque no haya pareja</h2>
+      <div class="venn">
+        <svg width="180" height="110" viewBox="0 0 180 110">
+          <circle cx="70" cy="55" r="45" fill="#8eb2ff" fill-opacity="0.8" stroke="#8eb2ff"/>
+          <circle cx="110" cy="55" r="45" fill="#26314a" fill-opacity="0.4" stroke="#8eb2ff"/>
+          <text x="35" y="30" fill="#dbe6ff" font-size="11">Clientes</text>
+          <text x="120" y="30" fill="#8eb2ff" font-size="11">Ventas</text>
+        </svg>
+        <div class="exp">Trae <b>TODOS</b> los registros de la tabla de la izquierda (la del <code>FROM</code>), tengan o no coincidencia en la derecha. Donde no hay match, SQL rellena con <code>NULL</code>.</div>
+      </div>
+      <pre>SELECT c.NombreCompleto, v.VentaID
+FROM Clientes AS c
+LEFT JOIN Ventas AS v
+    ON c.ClienteID = v.ClienteID
+WHERE v.VentaID IS NULL;  -- clientes que NUNCA han comprado</pre>
+      <p class="muted"><b>El truco más usado del curso:</b> LEFT JOIN + <code>WHERE columna_derecha IS NULL</code> = "encuéntrame lo que falta".</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill right">RIGHT JOIN</span> El espejo del LEFT JOIN</h2>
+      <p>Hace lo mismo que LEFT JOIN pero prioriza la tabla de la <b>derecha</b>. Casi nadie lo usa por gusto: es más fácil voltear el orden de las tablas y usar LEFT JOIN. Pero debes reconocerlo cuando lo veas en un SP ajeno.</p>
+      <pre>SELECT e.NombreEmpleado, v.MontoTotal
+FROM Ventas AS v
+RIGHT JOIN Empleados AS e
+    ON v.VendedorID = e.EmpleadoID;
+-- Equivale a: FROM Empleados AS e LEFT JOIN Ventas AS v ON ...</pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill full">FULL OUTER JOIN</span> Todo de ambos lados</h2>
+      <p>Trae todo de la izquierda <b>y</b> todo de la derecha, coincidan o no. Se usa en <b>auditorías/reconciliaciones</b>: comparar dos sistemas y encontrar qué no cuadra.</p>
+      <pre>SELECT v.VentaID, f.FacturaID
+FROM Ventas AS v
+FULL OUTER JOIN Facturas AS f
+    ON v.VentaID = f.VentaID
+WHERE v.VentaID IS NULL OR f.FacturaID IS NULL;</pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill cross">CROSS JOIN</span> Todas las combinaciones posibles</h2>
+      <p>No lleva <code>ON</code>. Combina cada fila de una tabla con cada fila de la otra. Útil para generar matrices/calendarios — peligroso si lo usas por accidente en tablas grandes.</p>
+      <pre>SELECT a.NombreAgencia, s.TipoServicio
+FROM Cat_Agencias AS a
+CROSS JOIN Cat_Servicios AS s;</pre>
+    </div>
+
+    <div class="card">
+      <h2><span class="pill self">AUTO-JOIN (Self Join)</span> Una tabla contra sí misma</h2>
+      <p>Se usa cuando una tabla se relaciona consigo misma, como <code>Empleados</code> con <code>JefeID</code> que también es un <code>EmpleadoID</code>. Le pones dos alias distintos a la misma tabla.</p>
+      <pre>SELECT emp.NombreEmpleado AS Empleado, jefe.NombreEmpleado AS Jefe
+FROM Empleados AS emp
+LEFT JOIN Empleados AS jefe
+    ON emp.JefeID = jefe.EmpleadoID;</pre>
+    </div>
+
+    <div class="card">
+      <h2>Tablas "puente" (relación muchos-a-muchos)</h2>
+      <p>A veces dos tablas se relacionan de "muchos a muchos": una orden de servicio puede usar varias refacciones, y una refacción se usa en muchas órdenes distintas. Para eso existe una <b>tabla intermedia</b> (aquí: <code>Ordenes_Refacciones</code>) que solo guarda parejas de IDs. Para conectar las dos tablas "reales", tienes que pasar <b>por en medio</b> de la tabla puente con dos JOINs.</p>
+      <pre>SELECT os.OrdenID, r.NombreRefaccion
+FROM Ordenes_Servicio AS os
+INNER JOIN Ordenes_Refacciones AS orf ON os.OrdenID = orf.OrdenID
+INNER JOIN Cat_Refacciones AS r       ON orf.RefaccionID = r.RefaccionID;</pre>
+    </div>
+
+    <div class="card">
+      <h2>⚠️ Diferencia de motor: aquí practicas en SQLite</h2>
+      <p class="muted">En tu trabajo los SPs están en <b>SQL Server</b> (T-SQL). Esta app ejecuta SQL real pero sobre <b>SQLite</b>. Diferencias que verás al leer SPs reales de Dalton:</p>
+      <ul>
+        <li><code>TOP 5</code> (SQL Server) ≈ <code>LIMIT 5</code> (aquí).</li>
+        <li><code>GETDATE()</code> (SQL Server) ≈ <code>date('now')</code> (aquí).</li>
+        <li>Multi-base de datos <code>[Base].[dbo].[Tabla]</code> — aquí solo hay una base, pero la lógica del JOIN es idéntica una vez que identificas tabla y alias.</li>
+      </ul>
+    </div>
+
+  </section>
+
+  <!-- ================= TABLAS ================= -->
+  <section id="view-tablas" class="view">
+    <div class="card">
+      <h2>Mapa interactivo de relaciones</h2>
+      <p class="muted">Haz clic en cualquier tabla del mapa: se resaltan solo <b>sus</b> conexiones y se atenúa el resto, para que veas de dónde a dónde puedes unir sin ruido visual.</p>
+      <div class="diagram-wrap">
+        <svg id="mapSvg" width="920" height="480" viewBox="0 0 920 480" style="min-width:920px;">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4f8cff"/></marker>
+          </defs>
+          <g id="edgesLayer"></g>
+          <g id="nodesLayer" font-family="Segoe UI, Arial" font-size="11.5"></g>
+        </svg>
+      </div>
+      <div id="mapDetail" class="hint-box" style="display:none;margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Explora cada tabla</h2>
+      <p class="muted">Haz clic para ver su estructura real y una muestra de sus datos.</p>
+      <div class="grid-tables" id="tableGrid"></div>
+      <div id="tablePreview" style="margin-top:14px;"></div>
+    </div>
+  </section>
+
+  <!-- ================= PRACTICA ================= -->
+  <section id="view-practica" class="view">
+
+    <div class="mode-toggle">
+      <button class="btn" id="modeWizardBtn">🧠 Entrenador de lógica (guiado)</button>
+      <button class="btn secondary" id="modeFreeBtn">⌨️ SQL libre</button>
+    </div>
+
+    <!-- ---- MODO WIZARD ---- -->
+    <div id="wizardMode">
+      <div class="card">
+        <div class="level-row" id="levelRow"></div>
+        <div class="ex-mini-list" id="exMiniList"></div>
+      </div>
+
+      <div class="card" id="wizCard" style="display:none;">
+        <div class="wiz-progress" id="wizProgress"></div>
+        <h2 id="wizQuestion"></h2>
+
+        <p class="muted" style="margin:0 0 4px;font-size:.82rem;">🗂️ Columnas de las tablas de este ejercicio (para que no tengas que ir a la pestaña "Tablas y mapa"):</p>
+        <div class="colref-wrap" id="wizTablesRef"></div>
+
+        <div class="wiz-step" data-step="0">
+          <p><b>Paso 1 — ¿Cuál es tu tabla principal?</b> Es la tabla de la que sale una fila por cada "cosa" que la pregunta te pide contar o listar (normalmente la tabla de hechos: la que tiene fecha o monto).</p>
+          <div class="opt-grid" id="stepMainOpts"></div>
         </div>
-        <div class="flex gap-2">
-            <button onclick="nav('teoria')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">1. Teoría</button>
-            <button onclick="nav('visor')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">2. Visor Relacional</button>
-            <button onclick="nav('ejercicios')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-md">3. Ejercicios & Lógica</button>
+
+        <div class="wiz-step" data-step="1">
+          <p><b>Paso 2 — ¿Qué tabla(s) secundarias necesitas unir?</b> Marca solo las que tienen un dato que te piden mostrar o filtrar. Tu tabla principal ya está fija: <span id="mainTableEcho" class="badge"></span></p>
+          <div class="opt-grid" id="stepSecOpts"></div>
+          <div class="btnrow"><button class="btn" id="confirmSecBtn">Confirmar selección</button></div>
         </div>
-    </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        <div class="wiz-step" data-step="2">
+          <p><b>Paso 3 — Campo de unión (ON) y tipo de JOIN</b>, tabla por tabla.</p>
+          <div id="joinStepsWrap"></div>
+        </div>
 
-        <section id="sec-teoria" class="sec-content hidden fade-in space-y-4">
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
-                <h2 class="text-xl font-bold text-emerald-400 border-b border-slate-700 pb-2 mb-4">📚 Fundamentos de JOINs</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
-                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                        <strong class="text-indigo-400 text-base block mb-2">INNER JOIN (La Coincidencia)</strong>
-                        <p>Busca parejas perfectas. Si un Cliente no tiene Pedidos, o un Pedido no tiene Cliente, se descartan de la lista. Solo muestra lo que existe en AMBAS tablas.</p>
-                    </div>
-                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                        <strong class="text-blue-400 text-base block mb-2">LEFT JOIN (La Prioridad Izquierda)</strong>
-                        <p>Conserva TODO lo de la tabla número 1 (la que pones en el FROM). Si la tabla 2 no tiene datos para empatar, no borra el registro, simplemente rellena con <code>NULL</code>.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="wiz-step" data-step="3">
+          <p><b>Paso 4 — Ponle alias (AS) a cada tabla.</b> Usa algo corto y reconocible (1-3 letras). No pueden repetirse.</p>
+          <div id="aliasWrap"></div>
+          <div class="btnrow"><button class="btn" id="confirmAliasBtn">Confirmar alias</button></div>
+          <div class="feedback" id="aliasFeedback"></div>
+        </div>
 
-        <section id="sec-visor" class="sec-content hidden fade-in space-y-4">
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
-                <div class="mb-4 border-b border-slate-700 pb-3 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-xl font-bold text-emerald-400">🔍 Visor Dinámico de Relaciones (ERP DaltonSoft)</h2>
-                        <p class="text-xs text-slate-400 mt-1">Selecciona una tabla a la izquierda para ver cómo se conecta con el resto del sistema.</p>
-                    </div>
-                    <span class="text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-500 border border-slate-700">Modo Power BI</span>
-                </div>
+        <div class="wiz-step" data-step="4">
+          <p><b>Paso 5 — Arma la consulta.</b> Esta es la estructura ya decidida (FROM/JOIN/ON). Es solo de referencia, no se ejecuta sola — cópiala al editor de abajo y complétala con tu <code>SELECT</code> (y <code>WHERE</code>/<code>GROUP BY</code> si el enunciado lo pide).</p>
+          <div class="skeleton" id="skeletonBox"></div>
+          <div class="btnrow"><button class="btn secondary" id="copySkeletonBtn">📋 Copiar esta estructura al editor</button></div>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div class="md:col-span-4 space-y-2 max-h-[60vh] overflow-y-auto pr-2">
-                        <button onclick="verRelacion('DSCatCtes')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
-                            👥 DSCatCtes (Clientes)
-                        </button>
-                        <button onclick="verRelacion('DSVtaPedidos')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
-                            🛍️ DSVtaPedidos (Pedidos de Venta)
-                        </button>
-                        <button onclick="verRelacion('DSInvVehiculos')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
-                            🚗 DSInvVehiculos (Autos/Inventario)
-                        </button>
-                        <button onclick="verRelacion('DSFacDocOri')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
-                            📄 DSFacDocOri (Facturas/Servicio)
-                        </button>
-                    </div>
+        <div class="btnrow" id="wizNavRow">
+          <button class="btn secondary" id="wizBackBtn" style="display:none;">← Atrás</button>
+        </div>
+      </div>
+    </div>
 
-                    <div class="md:col-span-8 bg-slate-900 border border-slate-700 rounded-xl p-6 min-h-[400px] flex items-center justify-center relative shadow-inner overflow-hidden" id="lienzo-visor">
-                        <p class="text-slate-500 text-sm">👈 Haz clic en una tabla para visualizar sus relaciones (PK y FK).</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- ---- MODO LIBRE ---- -->
+    <div id="freeMode" style="display:none;">
+      <div class="card">
+        <p class="muted">Explora libremente contra la base de datos completa, sin wizard. Marca las tablas que vas a usar para ver sus columnas antes de escribir tu consulta.</p>
+        <div class="table-pick-wrap" id="freeTablePicker"></div>
+        <div class="colref-wrap" id="freeTablesRef"></div>
+      </div>
+    </div>
 
-        <section id="sec-ejercicios" class="sec-content fade-in space-y-4">
-            
-            <div class="flex space-x-2 overflow-x-auto pb-2 border-b border-slate-800">
-                <button onclick="cargarModulo('inner')" id="btn-mod-inner" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-emerald-700 text-white shadow">Módulo 1: INNER JOIN</button>
-                <button onclick="cargarModulo('left')" id="btn-mod-left" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700">Módulo 2: LEFT JOIN</button>
-                <button onclick="cargarModulo('multi')" id="btn-mod-multi" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700">Módulo 3: JOINs Múltiples</button>
-            </div>
+    <!-- editor compartido -->
+    <div class="card">
+      <h3 style="margin-top:0;">Editor SQL</h3>
+      <textarea id="editor" spellcheck="false" placeholder="SELECT * FROM Clientes;"></textarea>
+      <div class="btnrow">
+        <button class="btn" id="runBtn">▶ Ejecutar</button>
+        <button class="btn good" id="checkBtn" style="display:none;">✔ Verificar mi respuesta</button>
+        <button class="btn secondary" id="clearBtn">Limpiar</button>
+      </div>
+      <div id="feedback"></div>
+      <div class="scrollx" id="resultWrap"></div>
+    </div>
 
-            <div class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
-                <div>
-                    <h3 id="ej-titulo" class="font-bold text-emerald-400 text-lg">Cargando Módulo...</h3>
-                    <p id="ej-objetivo" class="text-xs text-slate-400 mt-1">...</p>
-                </div>
-                <div class="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
-                    <button onclick="cambiarEjercicio(-1)" class="text-slate-400 hover:text-white">◀</button>
-                    <span id="ej-contador" class="text-xs font-bold font-mono">1 / 15</span>
-                    <button onclick="cambiarEjercicio(1)" class="text-slate-400 hover:text-white">▶</button>
-                </div>
-            </div>
+  </section>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                
-                <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl space-y-4 relative">
-                    <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">SUB-MÓDULO 1: LÓGICA</div>
-                    
-                    <h4 class="font-bold text-sm text-slate-200 border-b border-slate-700 pb-2 flex gap-2">
-                        <span>🧠</span> Desglose del Ejercicio
-                    </h4>
+</main>
 
-                    <div class="space-y-3 text-xs" id="logica-contenedor">
-                        </div>
-                </div>
+<script>
+let db, SQL;
+const LS_KEY = 'dalton_joins_progress_v2';
+let tableColumns = {}; // filled after db init via PRAGMA
 
-                <div class="lg:col-span-7 bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-xl space-y-4 relative">
-                    <div class="absolute -top-3 left-4 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">SUB-MÓDULO 2: CONSOLA SQL</div>
+// ---------------- SCHEMA ----------------
+const schemaSQL = `
+CREATE TABLE Cat_Agencias (AgenciaID INTEGER PRIMARY KEY, NombreAgencia TEXT, Ciudad TEXT);
+CREATE TABLE Cat_Marcas (MarcaID INTEGER PRIMARY KEY, NombreMarca TEXT);
+CREATE TABLE Cat_Modelos (ModeloID INTEGER PRIMARY KEY, NombreModelo TEXT, MarcaID INTEGER, Anio INTEGER,
+  FOREIGN KEY (MarcaID) REFERENCES Cat_Marcas(MarcaID));
+CREATE TABLE Empleados (EmpleadoID INTEGER PRIMARY KEY, NombreEmpleado TEXT, Puesto TEXT, AgenciaID INTEGER, JefeID INTEGER,
+  FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID), FOREIGN KEY (JefeID) REFERENCES Empleados(EmpleadoID));
+CREATE TABLE Clientes (ClienteID INTEGER PRIMARY KEY, NombreCompleto TEXT, Email TEXT, Ciudad TEXT);
+CREATE TABLE Inventario (InventarioID INTEGER PRIMARY KEY, ModeloID INTEGER, AgenciaID INTEGER, VIN TEXT, Color TEXT, Precio REAL, Stock INTEGER,
+  FOREIGN KEY (ModeloID) REFERENCES Cat_Modelos(ModeloID), FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID));
+CREATE TABLE Ventas (VentaID INTEGER PRIMARY KEY, ClienteID INTEGER, VendedorID INTEGER, InventarioID INTEGER, AgenciaID INTEGER, FechaVenta TEXT, MontoTotal REAL,
+  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (VendedorID) REFERENCES Empleados(EmpleadoID),
+  FOREIGN KEY (InventarioID) REFERENCES Inventario(InventarioID), FOREIGN KEY (AgenciaID) REFERENCES Cat_Agencias(AgenciaID));
+CREATE TABLE Facturas (FacturaID INTEGER PRIMARY KEY, VentaID INTEGER, MontoFacturado REAL, FechaFactura TEXT,
+  FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID));
+CREATE TABLE Cat_MetodosPago (MetodoPagoID INTEGER PRIMARY KEY, NombreMetodo TEXT);
+CREATE TABLE Pagos (PagoID INTEGER PRIMARY KEY, FacturaID INTEGER, MetodoPagoID INTEGER, MontoPagado REAL, FechaPago TEXT,
+  FOREIGN KEY (FacturaID) REFERENCES Facturas(FacturaID), FOREIGN KEY (MetodoPagoID) REFERENCES Cat_MetodosPago(MetodoPagoID));
+CREATE TABLE Cat_Servicios (ServicioID INTEGER PRIMARY KEY, TipoServicio TEXT, Costo REAL);
+CREATE TABLE Ordenes_Servicio (OrdenID INTEGER PRIMARY KEY, ClienteID INTEGER, ServicioID INTEGER, EmpleadoID INTEGER, FechaServicio TEXT,
+  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (ServicioID) REFERENCES Cat_Servicios(ServicioID),
+  FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID));
+CREATE TABLE Cat_Refacciones (RefaccionID INTEGER PRIMARY KEY, NombreRefaccion TEXT, Costo REAL);
+CREATE TABLE Ordenes_Refacciones (OrdenRefaccionID INTEGER PRIMARY KEY, OrdenID INTEGER, RefaccionID INTEGER, Cantidad INTEGER,
+  FOREIGN KEY (OrdenID) REFERENCES Ordenes_Servicio(OrdenID), FOREIGN KEY (RefaccionID) REFERENCES Cat_Refacciones(RefaccionID));
+CREATE TABLE Garantias (GarantiaID INTEGER PRIMARY KEY, VentaID INTEGER, FechaInicio TEXT, FechaFin TEXT, Estatus TEXT,
+  FOREIGN KEY (VentaID) REFERENCES Ventas(VentaID));
+CREATE TABLE Cotizaciones (CotizacionID INTEGER PRIMARY KEY, ClienteID INTEGER, ModeloID INTEGER, EmpleadoID INTEGER, FechaCotizacion TEXT, MontoEstimado REAL,
+  FOREIGN KEY (ClienteID) REFERENCES Clientes(ClienteID), FOREIGN KEY (ModeloID) REFERENCES Cat_Modelos(ModeloID),
+  FOREIGN KEY (EmpleadoID) REFERENCES Empleados(EmpleadoID));
+`;
 
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <span class="text-sm font-bold text-slate-300">Editor de Código</span>
-                        <button onclick="resetearSQL()" class="text-[10px] text-slate-500 hover:text-emerald-400 underline">Borrar / Reiniciar</button>
-                    </div>
+const seedSQL = `
+INSERT INTO Cat_Agencias VALUES
+(1,'Toyota GDL','Guadalajara'),(2,'Honda-Kia SLP','San Luis Potosi'),(3,'Kia MTY','Monterrey'),(4,'Lexus CDMX','Ciudad de Mexico');
 
-                    <textarea id="sql-editor" rows="5" class="w-full bg-slate-950 text-emerald-400 font-mono text-sm p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none shadow-inner" spellcheck="false"></textarea>
+INSERT INTO Cat_Marcas VALUES (1,'Toyota'),(2,'Honda'),(3,'Kia'),(4,'Lexus'),(5,'BYD');
 
-                    <button onclick="ejecutarReto()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition shadow-lg flex items-center justify-center gap-2">
-                        <span>▶</span> Ejecutar Consulta
-                    </button>
+INSERT INTO Cat_Modelos VALUES
+(1,'Hilux',1,2024),(2,'Corolla',1,2023),(3,'RAV4',1,2025),
+(4,'Civic',2,2024),(5,'CR-V',2,2023),
+(6,'Rio',3,2024),(7,'Sportage',3,2025),
+(8,'Seal',5,2024),
+(9,'ES',4,2024),(10,'NX',4,2025);
 
-                    <div class="mt-4 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
-                        <div class="bg-slate-800 px-3 py-1.5 border-b border-slate-700 flex justify-between items-center">
-                            <span class="text-[11px] font-bold text-slate-300">Resultado Obtenido</span>
-                            <span id="res-count" class="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-slate-400 font-mono">0 filas</span>
-                        </div>
-                        <div class="overflow-x-auto min-h-[150px] p-2" id="res-table-container">
-                            <p class="text-xs text-slate-600 italic text-center mt-10">Esperando ejecución...</p>
-                        </div>
-                    </div>
-                    
-                    <div id="feedback-msj" class="hidden p-3 rounded-lg text-xs font-bold mt-2"></div>
-                </div>
+INSERT INTO Empleados VALUES
+(1,'Roberto Salinas','Gerente',1,NULL),(2,'Ana Torres','Vendedor',1,1),(3,'Luis Medina','Vendedor',1,1),
+(4,'Sofia Reyes','Gerente',2,NULL),(5,'Carlos Pena','Vendedor',2,4),(6,'Marta Ibarra','Vendedor',2,4),
+(7,'Victor Garza','Gerente',3,NULL),(8,'Diego Cantu','Vendedor',3,7),
+(9,'Karla Ruiz','Vendedor',4,NULL),(10,'Pablo Nunez','Vendedor',4,NULL);
 
-            </div>
-        </section>
+INSERT INTO Clientes VALUES
+(1,'Jorge Alvarez','jorge.alvarez@mail.com','Guadalajara'),(2,'Mariana Cruz','mariana.cruz@mail.com','Guadalajara'),
+(3,'Ricardo Solis','ricardo.solis@mail.com','San Luis Potosi'),(4,'Paola Vega','paola.vega@mail.com','San Luis Potosi'),
+(5,'Hector Ramos','hector.ramos@mail.com','Monterrey'),(6,'Daniela Fuentes','daniela.fuentes@mail.com','Monterrey'),
+(7,'Ivan Ochoa','ivan.ochoa@mail.com','Ciudad de Mexico'),(8,'Renata Silva','renata.silva@mail.com','Ciudad de Mexico'),
+(9,'Fernando Lopez','fernando.lopez@mail.com','Guadalajara'),(10,'Ximena Rios','ximena.rios@mail.com','Monterrey'),
+(11,'Sergio Duran','sergio.duran@mail.com','San Luis Potosi'),(12,'Andrea Paz','andrea.paz@mail.com','Ciudad de Mexico'),
+(13,'Beto Cabrera','beto.cabrera@mail.com','Guadalajara'),(14,'Lucia Montes','lucia.montes@mail.com','Monterrey'),
+(15,'Omar Trejo','omar.trejo@mail.com','San Luis Potosi');
 
-    </main>
+INSERT INTO Inventario VALUES
+(1,1,1,'VIN-GDL-001','Blanco',620000,3),(2,2,1,'VIN-GDL-002','Rojo',410000,4),(3,3,1,'VIN-GDL-003','Gris',780000,2),
+(4,1,1,'VIN-GDL-004','Negro',635000,1),(5,2,1,'VIN-GDL-005','Azul',415000,2),
+(6,4,2,'VIN-SLP-001','Blanco',430000,3),(7,5,2,'VIN-SLP-002','Plata',455000,2),(8,4,2,'VIN-SLP-003','Negro',420000,2),
+(9,6,3,'VIN-MTY-001','Rojo',380000,3),(10,7,3,'VIN-MTY-002','Blanco',520000,2),(11,6,3,'VIN-MTY-003','Gris',395000,2),(12,7,3,'VIN-MTY-004','Negro',530000,1),
+(13,9,4,'VIN-CDMX-001','Blanco',890000,1),(14,9,4,'VIN-CDMX-002','Negro',910000,1),(15,10,4,'VIN-CDMX-003','Gris',950000,2),
+(16,8,4,'VIN-CDMX-004','Blanco',550000,2);
 
-    <script>
-        // ---------------------------------------------------------
-        // 1. MOTOR DE BASE DE DATOS (Creación de las 11 tablas ERP)
-        // ---------------------------------------------------------
-        function inicializarERP() {
-            try {
-                // Clientes y Ubicaciones
-                alasql('CREATE TABLE DSCatEdos (Cod_Edo INT, Nombre_Edo STRING)');
-                alasql("INSERT INTO DSCatEdos VALUES (1, 'Jalisco'), (2, 'CDMX')");
+INSERT INTO Ventas VALUES
+(1,1,2,1,1,'2025-01-15',620000),(2,2,2,2,1,'2025-02-03',410000),(3,9,3,4,1,'2025-02-20',635000),
+(4,13,NULL,3,1,'2025-03-05',780000),(5,3,5,6,2,'2025-01-22',430000),(6,4,6,7,2,'2025-02-11',455000),
+(7,11,NULL,8,2,'2025-03-18',420000),(8,5,8,9,3,'2025-01-30',380000),(9,6,8,10,3,'2025-02-25',520000),
+(10,10,8,11,3,'2025-04-02',395000),(11,14,NULL,12,3,'2025-04-10',530000),(12,7,NULL,13,4,'2025-02-14',890000),
+(13,8,NULL,14,4,'2025-03-01',910000),(14,1,3,5,1,'2025-04-15',415000),(15,2,2,1,1,'2024-11-05',610000),
+(16,5,5,6,2,'2024-12-20',425000),(17,3,6,7,2,'2025-05-02',460000),(18,6,8,9,3,'2025-05-14',390000),
+(19,9,3,4,1,'2025-05-20',770000),(20,10,8,10,3,'2025-06-01',540000);
 
-                alasql('CREATE TABLE DSCatCiud (Cod_Ciu INT, Cod_Edo INT, Nombre_Ciu STRING)');
-                alasql("INSERT INTO DSCatCiud VALUES (10, 1, 'Guadalajara'), (20, 2, 'Coyoacán')");
+INSERT INTO Facturas VALUES
+(1,1,620000,'2025-01-16'),(2,2,410000,'2025-02-04'),(3,3,635000,'2025-02-21'),(4,4,780000,'2025-03-06'),
+(5,5,430000,'2025-01-23'),(6,6,455000,'2025-02-12'),(7,8,380000,'2025-01-31'),(8,9,520000,'2025-02-26'),
+(9,10,395000,'2025-04-03'),(10,12,890000,'2025-02-15'),(11,14,415000,'2025-04-16'),(12,15,610000,'2024-11-06'),
+(13,16,425000,'2024-12-21'),(14,17,460500,'2025-05-03'),(15,18,390000,'2025-05-15'),(16,NULL,150000,'2025-03-22'),(17,20,540000,'2025-06-02');
 
-                alasql('CREATE TABLE DSCatCtes (Cod_Cte INT, Cod_Ciu INT, Cod_Edo INT, Nombre STRING)');
-                alasql("INSERT INTO DSCatCtes VALUES (1001, 10, 1, 'Empresa Automotriz SA'), (1002, 20, 2, 'Juan Perez'), (1003, 10, 1, 'Cliente Sin Compras')");
+INSERT INTO Cat_MetodosPago VALUES (1,'Contado'),(2,'Tarjeta'),(3,'Transferencia'),(4,'Financiamiento');
 
-                // Pedidos y Vendedores
-                alasql('CREATE TABLE DSCatVend (Cod_Vend INT, Nombre_Vend STRING)');
-                alasql("INSERT INTO DSCatVend VALUES (50, 'Vendedor Estrella'), (51, 'Vendedor Nuevo')");
+INSERT INTO Pagos VALUES
+(1,1,2,620000,'2025-01-16'),(2,2,1,410000,'2025-02-04'),(3,3,4,635000,'2025-02-22'),(4,4,3,780000,'2025-03-07'),
+(5,5,2,430000,'2025-01-23'),(6,6,1,455000,'2025-02-12'),(7,8,4,520000,'2025-02-27'),(8,9,2,395000,'2025-04-03'),
+(9,10,3,890000,'2025-02-16'),(10,12,3,610000,'2024-11-06'),(11,14,2,460500,'2025-05-04'),(12,15,1,390000,'2025-05-15');
 
-                alasql('CREATE TABLE DSVtaPedidos (Tipo_Ped STRING, Num_Ped INT, Cod_Cte INT, Cod_Vend INT)');
-                alasql("INSERT INTO DSVtaPedidos VALUES ('PN', 5001, 1001, 50), ('PS', 5002, 1002, 51)");
+INSERT INTO Cat_Servicios VALUES (1,'Afinacion',1800),(2,'Cambio de aceite',900),(3,'Diagnostico electronico',600),(4,'Alineacion y balanceo',750);
 
-                // Vehículos, Modelos y Colores
-                alasql('CREATE TABLE DSCatColor (Cod_Col INT, Nombre_Col STRING)');
-                alasql("INSERT INTO DSCatColor VALUES (1, 'Rojo'), (2, 'Plata')");
+INSERT INTO Ordenes_Servicio VALUES
+(1,1,2,2,'2025-02-01'),(2,2,1,2,'2025-02-15'),(3,3,3,5,'2025-02-05'),(4,5,2,8,'2025-03-01'),
+(5,6,4,8,'2025-03-10'),(6,9,1,2,'2025-03-15'),(7,4,2,5,'2025-03-20'),(8,7,3,7,'2025-04-01'),
+(9,12,4,9,'2025-04-05'),(10,1,1,3,'2025-05-01');
 
-                alasql('CREATE TABLE DSCatModXTpAut (Cod_Mod INT, Descripcion STRING)');
-                alasql("INSERT INTO DSCatModXTpAut VALUES (99, 'Civic'), (88, 'CR-V')");
+INSERT INTO Cat_Refacciones VALUES
+(1,'Filtro de aceite',250),(2,'Balatas delanteras',1200),(3,'Bujias',180),(4,'Banda de tiempo',2200),(5,'Liquido de frenos',300),(6,'Filtro de aire',320);
 
-                alasql('CREATE TABLE DSInvVehiculos (NumSer_Veh STRING, Cod_Mod INT, Cod_Col INT)');
-                alasql("INSERT INTO DSInvVehiculos VALUES ('VIN001', 99, 2), ('VIN002', 88, 1)");
+INSERT INTO Ordenes_Refacciones VALUES
+(1,1,1,1),(2,1,3,4),(3,2,1,1),(4,3,5,2),(5,4,1,1),(6,4,6,1),(7,5,2,2),(8,6,1,1),
+(9,7,1,1),(10,7,6,1),(11,8,3,4),(12,9,4,1),(13,10,1,1),(14,10,3,4),(15,10,5,1);
 
-                // Servicio y Facturación
-                alasql('CREATE TABLE DSFacDocOri (TpDoc_DOri STRING, FolDoc_DOri INT, Cod_Cte INT, NumSer_Vehi STRING)');
-                alasql("INSERT INTO DSFacDocOri VALUES ('FAC', 100, 1001, 'VIN001')");
+INSERT INTO Garantias VALUES
+(1,1,'2025-01-15','2027-01-15','Vigente'),(2,2,'2025-02-03','2027-02-03','Vigente'),(3,3,'2025-02-20','2027-02-20','Vigente'),
+(4,5,'2025-01-22','2027-01-22','Vigente'),(5,6,'2025-02-11','2027-02-11','Vigente'),(6,8,'2025-01-30','2027-01-30','Vigente'),
+(7,9,'2025-02-25','2027-02-25','Vencida'),(8,12,'2025-02-14','2027-02-14','Vigente'),(9,14,'2025-04-15','2027-04-15','Vigente'),
+(10,15,'2024-11-05','2026-11-05','Vencida'),(11,17,'2025-05-02','2027-05-02','Vigente'),(12,20,'2025-06-01','2027-06-01','Vigente');
 
-                console.log("Base de datos DaltonSoft cargada al 100%");
-            } catch (err) {
-                console.error("Error BD:", err);
-            }
-        }
+INSERT INTO Cotizaciones VALUES
+(1,4,3,2,'2025-01-10',790000),(2,7,6,8,'2025-01-25',385000),(3,10,9,9,'2025-02-05',895000),
+(4,12,10,9,'2025-02-18',955000),(5,3,1,3,'2025-03-02',625000),(6,15,7,8,'2025-03-14',525000),
+(7,2,4,5,'2025-03-28',435000),(8,11,5,5,'2025-04-09',460000),(9,6,2,3,'2025-04-22',415000),(10,9,8,9,'2025-05-06',555000);
+`;
 
-        // ---------------------------------------------------------
-        // 2. NAVEGACIÓN Y VISOR RELACIONAL (POWER BI)
-        // ---------------------------------------------------------
-        function nav(pantalla) {
-            document.querySelectorAll('.sec-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`sec-${pantalla}`).classList.remove('hidden');
+// ---------------- METADATA para mapa y wizard ----------------
+const tableInfo = {
+  Cat_Agencias: 'Catálogo · 4 filas. Agencias/sucursales.',
+  Cat_Marcas: 'Catálogo · 5 filas. Marcas de auto.',
+  Cat_Modelos: 'Catálogo · 10 filas. FK a Cat_Marcas.',
+  Empleados: 'Catálogo · 10 filas. FK a Cat_Agencias, self-join por JefeID.',
+  Clientes: 'Catálogo · 15 filas. Algunos nunca compran (a propósito).',
+  Inventario: 'Hechos · 16 filas. Unidades físicas: FK a Cat_Modelos y Cat_Agencias.',
+  Ventas: 'Hechos · 20 filas. Tabla central: FK a Clientes, Empleados, Inventario, Agencias.',
+  Facturas: 'Hechos · 17 filas. FK a Ventas. Hay huecos y una huérfana (a propósito).',
+  Cat_MetodosPago: 'Catálogo · 4 filas.',
+  Pagos: 'Hechos · 12 filas. FK a Facturas y Cat_MetodosPago. No todas las facturas tienen pago.',
+  Cat_Servicios: 'Catálogo · 4 filas. Tipos de servicio de taller.',
+  Ordenes_Servicio: 'Hechos · 10 filas. FK a Clientes, Cat_Servicios, Empleados.',
+  Cat_Refacciones: 'Catálogo · 6 filas.',
+  Ordenes_Refacciones: 'Tabla puente (muchos-a-muchos) · 15 filas. Conecta Ordenes_Servicio con Cat_Refacciones.',
+  Garantias: 'Hechos · 12 filas. FK a Ventas. No todas las ventas tienen garantía (a propósito).',
+  Cotizaciones: 'Hechos · 10 filas. FK a Clientes, Cat_Modelos, Empleados. No siempre se convierten en venta.'
+};
 
-            const btns = document.querySelectorAll('.nav-btn');
-            btns.forEach(b => {
-                b.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
-                b.classList.add('bg-slate-800', 'text-slate-300');
-            });
-            event.currentTarget.classList.remove('bg-slate-800', 'text-slate-300');
-            event.currentTarget.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
-        }
+const relationships = [
+  {from:'Cat_Modelos', field:'MarcaID', to:'Cat_Marcas', toField:'MarcaID'},
+  {from:'Empleados', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
+  {from:'Empleados', field:'JefeID', to:'Empleados', toField:'EmpleadoID'},
+  {from:'Inventario', field:'ModeloID', to:'Cat_Modelos', toField:'ModeloID'},
+  {from:'Inventario', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
+  {from:'Ventas', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
+  {from:'Ventas', field:'VendedorID', to:'Empleados', toField:'EmpleadoID'},
+  {from:'Ventas', field:'InventarioID', to:'Inventario', toField:'InventarioID'},
+  {from:'Ventas', field:'AgenciaID', to:'Cat_Agencias', toField:'AgenciaID'},
+  {from:'Facturas', field:'VentaID', to:'Ventas', toField:'VentaID'},
+  {from:'Pagos', field:'FacturaID', to:'Facturas', toField:'FacturaID'},
+  {from:'Pagos', field:'MetodoPagoID', to:'Cat_MetodosPago', toField:'MetodoPagoID'},
+  {from:'Ordenes_Servicio', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
+  {from:'Ordenes_Servicio', field:'ServicioID', to:'Cat_Servicios', toField:'ServicioID'},
+  {from:'Ordenes_Servicio', field:'EmpleadoID', to:'Empleados', toField:'EmpleadoID'},
+  {from:'Ordenes_Refacciones', field:'OrdenID', to:'Ordenes_Servicio', toField:'OrdenID'},
+  {from:'Ordenes_Refacciones', field:'RefaccionID', to:'Cat_Refacciones', toField:'RefaccionID'},
+  {from:'Garantias', field:'VentaID', to:'Ventas', toField:'VentaID'},
+  {from:'Cotizaciones', field:'ClienteID', to:'Clientes', toField:'ClienteID'},
+  {from:'Cotizaciones', field:'ModeloID', to:'Cat_Modelos', toField:'ModeloID'},
+  {from:'Cotizaciones', field:'EmpleadoID', to:'Empleados', toField:'EmpleadoID'}
+];
 
-        // Diccionario visual de relaciones
-        const relaciones = {
-            DSCatCtes: {
-                titulo: "👥 DSCatCtes (Catálogo de Clientes)",
-                pk: "Cod_Cte",
-                conexiones: [
-                    { tabla: "DSCatCiud", fk: "Cod_Ciu", desc: "Se conecta para saber su Ciudad" },
-                    { tabla: "DSCatEdos", fk: "Cod_Edo", desc: "Se conecta para saber su Estado" }
-                ]
-            },
-            DSVtaPedidos: {
-                titulo: "🛍️ DSVtaPedidos (Pedidos de Venta)",
-                pk: "Tipo_Ped + Num_Ped",
-                conexiones: [
-                    { tabla: "DSCatCtes", fk: "Cod_Cte", desc: "Identifica QUÉ cliente compró" },
-                    { tabla: "DSCatVend", fk: "Cod_Vend", desc: "Identifica QUÉ vendedor cerró la venta" }
-                ]
-            },
-            DSInvVehiculos: {
-                titulo: "🚗 DSInvVehiculos (Inventario Físico)",
-                pk: "NumSer_Veh (VIN)",
-                conexiones: [
-                    { tabla: "DSCatModXTpAut", fk: "Cod_Mod", desc: "Se conecta para obtener el Modelo (ej. Civic)" },
-                    { tabla: "DSCatColor", fk: "Cod_Col", desc: "Se conecta para obtener el Nombre del Color" }
-                ]
-            },
-            DSFacDocOri: {
-                titulo: "📄 DSFacDocOri (Facturas/Servicio)",
-                pk: "TpDoc_DOri + FolDoc_DOri",
-                conexiones: [
-                    { tabla: "DSCatCtes", fk: "Cod_Cte", desc: "A nombre de quién está la factura" },
-                    { tabla: "DSInvVehiculos", fk: "NumSer_Vehi", desc: "A qué auto se le dio el servicio" }
-                ]
-            }
-        };
+const mapLayout = [
+  ['Cat_Agencias','Cat_Marcas','Cat_MetodosPago','Cat_Servicios'],
+  ['Cat_Modelos','Empleados','Cat_Refacciones','Garantias'],
+  ['Inventario','Ventas','Facturas','Cotizaciones'],
+  ['Clientes','Pagos','Ordenes_Servicio','Ordenes_Refacciones']
+];
+const nodePos = {};
+mapLayout.forEach((row,r)=> row.forEach((name,c)=>{ nodePos[name] = {x: c*220+130, y: r*110+55}; }));
 
-        function verRelacion(tabla) {
-            const data = relaciones[tabla];
-            const lienzo = document.getElementById('lienzo-visor');
-            
-            let html = `
-                <div class="flex flex-col items-center w-full animate-fadeIn">
-                    <div class="bg-indigo-900 border-2 border-indigo-500 rounded-xl p-4 w-3/4 mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10 relative text-center">
-                        <h3 class="font-bold text-white text-lg">${data.titulo}</h3>
-                        <span class="inline-block mt-2 bg-amber-500/20 text-amber-300 text-xs font-mono px-2 py-1 rounded border border-amber-500/50">
-                            🔑 Primary Key: ${data.pk}
-                        </span>
-                    </div>
-            `;
+function relatedOf(table){
+  return relationships.filter(r=>r.from===table || r.to===table);
+}
 
-            data.conexiones.forEach(con => {
-                html += `
-                    <div class="flex w-full items-start mb-4">
-                        <div class="w-1/4 flex flex-col items-center justify-start mt-2">
-                            <div class="h-8 border-l-2 border-dashed border-emerald-500 mb-1"></div>
-                            <span class="text-[10px] text-emerald-400 bg-slate-900 px-1 font-mono border border-emerald-900 rounded">🔗 ON ${data.pk.split(' ')[0]} = ${con.fk}</span>
-                            <div class="text-emerald-500">▼</div>
-                        </div>
-                        <div class="w-3/4 bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-md relative">
-                            <span class="absolute -left-2 top-3 w-4 h-4 bg-slate-900 border border-slate-600 transform rotate-45"></span>
-                            <h4 class="font-bold text-emerald-400 text-sm">${con.tabla}</h4>
-                            <p class="text-xs text-slate-400 mt-1">${con.desc}</p>
-                            <span class="inline-block mt-1 bg-emerald-900/30 text-emerald-300 text-[10px] font-mono px-1 py-0.5 rounded">
-                                FK (Llave Foránea): ${con.fk}
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
+function colRefCardHTML(table){
+  const cols = tableColumns[table] || [];
+  return `<div class="colref-card"><b>${table}</b><div class="cols">${cols.map(c=>`<span>${c}</span>`).join('')}</div></div>`;
+}
 
-            html += `</div>`;
-            lienzo.innerHTML = html;
-        }
+// ---------------- EJERCICIOS (wizard) ----------------
+function randOf(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-        // ---------------------------------------------------------
-        // 3. SISTEMA DE EJERCICIOS Y LÓGICA (15 por Módulo soportados)
-        // ---------------------------------------------------------
-        
-        // Base de datos de ejercicios (Estructura diseñada para soportar hasta 15 por array)
-        const dbEjercicios = {
-            inner: [
-                {
-                    titulo: "Ejercicio 1: Ventas y Vendedores",
-                    objetivo: "Obtener la lista de pedidos de venta y mostrar EL NOMBRE del vendedor que lo realizó.",
-                    sql: "SELECT p.Num_Ped, v.Nombre_Vend\nFROM DSVtaPedidos AS p\nINNER JOIN DSCatVend AS v \n  ON p.Cod_Vend = v.Cod_Vend;",
-                    logica: [
-                        { p: "1. El Caso", desc: "Queremos ver pedidos cruzados con el catálogo de vendedores para no ver solo el código, sino el nombre." },
-                        { p: "2. Tabla Principal", desc: "Iniciamos con los Pedidos: <code>DSVtaPedidos</code>." },
-                        { p: "3. Alias y Orden", desc: "Le damos el apodo <b>p</b> a los Pedidos, y <b>v</b> a los Vendedores (<code>DSCatVend AS v</code>)." },
-                        { p: "4. Tipo de JOIN", desc: "<span class='text-emerald-400 font-bold'>INNER JOIN</span> porque queremos parejas perfectas: Pedidos que sí tengan un vendedor asignado válido." },
-                        { p: "5. Conexión (ON)", desc: "El puente es el código del vendedor: <code>ON p.Cod_Vend = v.Cod_Vend</code>." }
-                    ]
-                }
-                // Aquí se agregarían los ejercicios 2 al 15...
-            ],
-            left: [
-                {
-                    titulo: "Ejercicio 1: Clientes Totales y sus Compras",
-                    objetivo: "Extraer TODOS los clientes registrados en DaltonSoft, y si tienen un pedido, mostrarlo. Si no han comprado, no borrarlos de la lista.",
-                    sql: "SELECT c.Nombre, p.Num_Ped\nFROM DSCatCtes AS c\nLEFT JOIN DSVtaPedidos AS p \n  ON c.Cod_Cte = p.Cod_Cte;",
-                    logica: [
-                        { p: "1. El Caso", desc: "El departamento de CRM necesita ver a TODOS los clientes, incluyendo a 'Cliente Sin Compras'." },
-                        { p: "2. Tabla Principal", desc: "Nuestra base obligatoria (izquierda) es <code>DSCatCtes</code>." },
-                        { p: "3. Alias y Orden", desc: "<b>c</b> para Clientes, <b>p</b> para Pedidos." },
-                        { p: "4. Tipo de JOIN", desc: "<span class='text-blue-400 font-bold'>LEFT JOIN</span>. Esto protege la tabla izquierda (Clientes) para que no desaparezcan si no hay coincidencia a la derecha." },
-                        { p: "5. Conexión (ON)", desc: "Ambas tablas comparten el código de cliente: <code>ON c.Cod_Cte = p.Cod_Cte</code>." }
-                    ]
-                }
-            ],
-            multi: [
-                {
-                    titulo: "Ejercicio 1: Reporte Triple (Cliente + Ciudad + Estado)",
-                    objetivo: "Mostrar el Nombre del Cliente, el Nombre de su Ciudad y el Nombre de su Estado.",
-                    sql: "SELECT c.Nombre, ciu.Nombre_Ciu, e.Nombre_Edo\nFROM DSCatCtes AS c\nINNER JOIN DSCatCiud AS ciu ON c.Cod_Ciu = ciu.Cod_Ciu\nINNER JOIN DSCatEdos AS e ON c.Cod_Edo = e.Cod_Edo;",
-                    logica: [
-                        { p: "1. El Caso", desc: "Unir 3 tablas para armar la dirección completa en texto legible, no en códigos numéricos." },
-                        { p: "2. Tabla Principal", desc: "El centro de información es el Cliente: <code>DSCatCtes AS c</code>." },
-                        { p: "3. Alias Múltiples", desc: "<b>c</b>=Clientes, <b>ciu</b>=Ciudades, <b>e</b>=Estados." },
-                        { p: "4. Estructura", desc: "Se necesitan 2 JOINs consecutivos encadenados a la tabla Clientes." },
-                        { p: "5. Conexión Múltiple", desc: "1er Enlace: <code>c.Cod_Ciu = ciu.Cod_Ciu</code><br>2do Enlace: <code>c.Cod_Edo = e.Cod_Edo</code>." }
-                    ]
-                }
-            ]
-        };
+const levels = [
+  {n:1, name:'Nivel 1 · INNER JOIN simple'},
+  {n:2, name:'Nivel 2 · INNER JOIN múltiple'},
+  {n:3, name:'Nivel 3 · LEFT JOIN'},
+  {n:4, name:'Nivel 4 · RIGHT / FULL OUTER'},
+  {n:5, name:'Nivel 5 · CROSS / AUTO-JOIN'},
+  {n:6, name:'Nivel 6 · Tabla puente y combinaciones'}
+];
 
-        let moduloActivo = 'inner';
-        let indiceActivo = 0;
+const exercises = [
+  // NIVEL 1 — INNER JOIN simple (12)
+  {id:'l1e1', level:1, pill:'inner', main:'Ventas',
+    secondary:[{table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}],
+    text:()=>'Muestra el nombre del cliente y el monto de cada venta.',
+    sql:()=>`SELECT c.NombreCompleto, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID`},
+  {id:'l1e2', level:1, pill:'inner', main:'Inventario',
+    secondary:[{table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}],
+    text:()=>'Muestra el VIN de cada unidad en inventario junto con el nombre del modelo.',
+    sql:()=>`SELECT i.VIN, m.NombreModelo FROM Inventario i INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID`},
+  {id:'l1e3', level:1, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[{table:'Cat_Servicios', from:'Ordenes_Servicio', onFrom:'ServicioID', onTo:'ServicioID', type:'INNER'}],
+    text:()=>'Muestra la fecha de cada orden de servicio junto con el tipo de servicio realizado.',
+    sql:()=>`SELECT os.FechaServicio, s.TipoServicio FROM Ordenes_Servicio os INNER JOIN Cat_Servicios s ON os.ServicioID=s.ServicioID`},
+  {id:'l1e4', level:1, pill:'inner', main:'Empleados',
+    secondary:[{table:'Cat_Agencias', from:'Empleados', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}],
+    text:()=>'Muestra el nombre de cada empleado junto con la ciudad de la agencia donde trabaja.',
+    sql:()=>`SELECT e.NombreEmpleado, a.Ciudad FROM Empleados e INNER JOIN Cat_Agencias a ON e.AgenciaID=a.AgenciaID`},
+  {id:'l1e5', level:1, pill:'inner', main:'Inventario',
+    secondary:[{table:'Cat_Agencias', from:'Inventario', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}],
+    text:()=>'Muestra el VIN de cada unidad y el nombre de la agencia donde está.',
+    sql:()=>`SELECT i.VIN, a.NombreAgencia FROM Inventario i INNER JOIN Cat_Agencias a ON i.AgenciaID=a.AgenciaID`},
+  {id:'l1e6', level:1, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[{table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}],
+    text:()=>'Muestra la fecha de cada orden de servicio y el nombre del empleado que la atendió.',
+    sql:()=>`SELECT os.FechaServicio, e.NombreEmpleado FROM Ordenes_Servicio os INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID`},
+  {id:'l1e7', level:1, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[{table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}],
+    text:()=>'Muestra el nombre del cliente y la fecha de cada orden de servicio que ha pedido.',
+    sql:()=>`SELECT c.NombreCompleto, os.FechaServicio FROM Ordenes_Servicio os INNER JOIN Clientes c ON os.ClienteID=c.ClienteID`},
+  {id:'l1e8', level:1, pill:'inner', main:'Pagos',
+    secondary:[{table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'INNER'}],
+    text:()=>'Muestra el monto pagado y el nombre del método de pago usado en cada pago.',
+    sql:()=>`SELECT p.MontoPagado, mp.NombreMetodo FROM Pagos p INNER JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID`},
+  {id:'l1e9', level:1, pill:'inner', main:'Cotizaciones',
+    secondary:[{table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}],
+    text:()=>'Muestra el monto estimado de cada cotización junto con el nombre del empleado que la hizo.',
+    sql:()=>`SELECT co.MontoEstimado, e.NombreEmpleado FROM Cotizaciones co INNER JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID`},
+  {id:'l1e10', level:1, pill:'inner', main:'Facturas',
+    secondary:[{table:'Ventas', from:'Facturas', onFrom:'VentaID', onTo:'VentaID', type:'INNER'}],
+    text:()=>'Muestra el monto facturado y la fecha de venta original de cada factura.',
+    sql:()=>`SELECT f.MontoFacturado, v.FechaVenta FROM Facturas f INNER JOIN Ventas v ON f.VentaID=v.VentaID`},
+  {id:'l1e11', level:1, pill:'inner', main:'Ordenes_Refacciones',
+    secondary:[{table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}],
+    text:()=>'Muestra el nombre de cada refacción usada junto con la cantidad usada en esa orden.',
+    sql:()=>`SELECT r.NombreRefaccion, orf.Cantidad FROM Ordenes_Refacciones orf INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
+  {id:'l1e12', level:1, pill:'inner', main:'Garantias',
+    secondary:[{table:'Ventas', from:'Garantias', onFrom:'VentaID', onTo:'VentaID', type:'INNER'}],
+    text:()=>'Muestra el estatus de cada garantía junto con el monto de la venta original.',
+    sql:()=>`SELECT g.Estatus, v.MontoTotal FROM Garantias g INNER JOIN Ventas v ON g.VentaID=v.VentaID`},
 
-        function cargarModulo(modulo) {
-            moduloActivo = modulo;
-            indiceActivo = 0;
+  // NIVEL 2 — INNER JOIN múltiple (10)
+  {id:'l2e1', level:2, pill:'inner', main:'Ventas',
+    secondary:[
+      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'},
+      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
+    ],
+    genParams:()=>({anio:randOf([2023,2024,2025])}),
+    text:p=>`Muestra nombre del cliente, nombre del modelo y monto de venta, solo para autos del año ${p.anio}.`,
+    sql:p=>`SELECT c.NombreCompleto, m.NombreModelo, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID WHERE m.Anio=${p.anio}`},
+  {id:'l2e2', level:2, pill:'inner', main:'Cotizaciones',
+    secondary:[
+      {table:'Clientes', from:'Cotizaciones', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Cat_Modelos', from:'Cotizaciones', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
+    ],
+    text:()=>'Muestra nombre de cliente, modelo cotizado y monto estimado de cada cotización.',
+    sql:()=>`SELECT cl.NombreCompleto, m.NombreModelo, co.MontoEstimado FROM Cotizaciones co INNER JOIN Clientes cl ON co.ClienteID=cl.ClienteID INNER JOIN Cat_Modelos m ON co.ModeloID=m.ModeloID`},
+  {id:'l2e3', level:2, pill:'inner', main:'Ordenes_Refacciones',
+    secondary:[
+      {table:'Ordenes_Servicio', from:'Ordenes_Refacciones', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'},
+      {table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+    ],
+    text:()=>'Muestra la fecha de la orden de servicio, el nombre de la refacción usada y la cantidad.',
+    sql:()=>`SELECT os.FechaServicio, r.NombreRefaccion, orf.Cantidad FROM Ordenes_Refacciones orf INNER JOIN Ordenes_Servicio os ON orf.OrdenID=os.OrdenID INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
+  {id:'l2e4', level:2, pill:'inner', main:'Ventas',
+    secondary:[
+      {table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'INNER'},
+      {table:'Cat_Agencias', from:'Ventas', onFrom:'AgenciaID', onTo:'AgenciaID', type:'INNER'}
+    ],
+    genParams:()=>({ciudad:randOf(['Guadalajara','San Luis Potosi','Monterrey','Ciudad de Mexico'])}),
+    text:p=>`Muestra el vendedor y la ciudad de la agencia de cada venta, solo para ventas hechas en agencias de '${p.ciudad}'.`,
+    sql:p=>`SELECT e.NombreEmpleado, a.Ciudad FROM Ventas v INNER JOIN Empleados e ON v.VendedorID=e.EmpleadoID INNER JOIN Cat_Agencias a ON v.AgenciaID=a.AgenciaID WHERE a.Ciudad='${p.ciudad}'`},
+  {id:'l2e5', level:2, pill:'inner', main:'Inventario',
+    secondary:[
+      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'},
+      {table:'Cat_Marcas', from:'Cat_Modelos', onFrom:'MarcaID', onTo:'MarcaID', type:'INNER'}
+    ],
+    genParams:()=>({marca:randOf(['Toyota','Honda','Kia','Lexus','BYD'])}),
+    text:p=>`Muestra el VIN, el modelo y el precio de cada unidad de la marca '${p.marca}'.`,
+    sql:p=>`SELECT i.VIN, m.NombreModelo, i.Precio FROM Inventario i INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID INNER JOIN Cat_Marcas ma ON m.MarcaID=ma.MarcaID WHERE ma.NombreMarca='${p.marca}'`},
+  {id:'l2e6', level:2, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[
+      {table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'}
+    ],
+    genParams:()=>({ciudad:randOf(['Guadalajara','San Luis Potosi','Monterrey','Ciudad de Mexico'])}),
+    text:p=>`Muestra el nombre del cliente, su ciudad y el empleado que lo atendió, solo para clientes de '${p.ciudad}'.`,
+    sql:p=>`SELECT cl.NombreCompleto, cl.Ciudad, e.NombreEmpleado FROM Ordenes_Servicio os INNER JOIN Clientes cl ON os.ClienteID=cl.ClienteID INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID WHERE cl.Ciudad='${p.ciudad}'`},
+  {id:'l2e7', level:2, pill:'inner', main:'Ventas',
+    secondary:[
+      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'}
+    ],
+    genParams:()=>({color:randOf(['Blanco','Rojo','Gris','Negro','Azul','Plata'])}),
+    text:p=>`Muestra el nombre del cliente, el color del auto comprado y el monto, solo para autos de color '${p.color}'.`,
+    sql:p=>`SELECT c.NombreCompleto, i.Color, v.MontoTotal FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID WHERE i.Color='${p.color}'`},
+  {id:'l2e8', level:2, pill:'inner', main:'Cotizaciones',
+    secondary:[
+      {table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'},
+      {table:'Cat_Modelos', from:'Cotizaciones', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'}
+    ],
+    genParams:()=>({anio:randOf([2023,2024,2025])}),
+    text:p=>`Muestra el nombre del empleado que cotizó, el modelo cotizado y el monto estimado, solo para modelos del año ${p.anio}.`,
+    sql:p=>`SELECT e.NombreEmpleado, m.NombreModelo, co.MontoEstimado FROM Cotizaciones co INNER JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID INNER JOIN Cat_Modelos m ON co.ModeloID=m.ModeloID WHERE m.Anio=${p.anio}`},
+  {id:'l2e9', level:2, pill:'inner', main:'Pagos',
+    secondary:[
+      {table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'INNER'},
+      {table:'Facturas', from:'Pagos', onFrom:'FacturaID', onTo:'FacturaID', type:'INNER'}
+    ],
+    text:()=>'Muestra el monto pagado, el método de pago y el monto de la factura correspondiente de cada pago.',
+    sql:()=>`SELECT p.MontoPagado, mp.NombreMetodo, f.MontoFacturado FROM Pagos p INNER JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID INNER JOIN Facturas f ON p.FacturaID=f.FacturaID`},
+  {id:'l2e10', level:2, pill:'inner', main:'Garantias',
+    secondary:[
+      {table:'Ventas', from:'Garantias', onFrom:'VentaID', onTo:'VentaID', type:'INNER'},
+      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'}
+    ],
+    genParams:()=>({estatus:randOf(['Vigente','Vencida'])}),
+    text:p=>`Muestra el nombre del cliente y la fecha de fin de garantía, solo para garantías con estatus '${p.estatus}'.`,
+    sql:p=>`SELECT cl.NombreCompleto, g.FechaFin FROM Garantias g INNER JOIN Ventas v ON g.VentaID=v.VentaID INNER JOIN Clientes cl ON v.ClienteID=cl.ClienteID WHERE g.Estatus='${p.estatus}'`},
 
-            // UI Botones
-            document.querySelectorAll('.mod-btn').forEach(b => {
-                b.classList.remove('bg-emerald-700', 'text-white');
-                b.classList.add('bg-slate-800', 'text-slate-400');
-            });
-            document.getElementById(`btn-mod-${modulo}`).classList.remove('bg-slate-800', 'text-slate-400');
-            document.getElementById(`btn-mod-${modulo}`).classList.add('bg-emerald-700', 'text-white');
+  // NIVEL 3 — LEFT JOIN (8)
+  {id:'l3e1', level:3, pill:'left', main:'Clientes',
+    secondary:[{table:'Ventas', from:'Clientes', onFrom:'ClienteID', onTo:'ClienteID', type:'LEFT'}],
+    text:()=>'Muestra todos los clientes y el VentaID de sus compras (NULL si nunca han comprado).',
+    sql:()=>`SELECT c.NombreCompleto, v.VentaID FROM Clientes c LEFT JOIN Ventas v ON c.ClienteID=v.ClienteID`},
+  {id:'l3e2', level:3, pill:'left', main:'Ventas',
+    secondary:[{table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'LEFT'}],
+    text:()=>'Muestra cada venta y el nombre del vendedor (NULL si la venta no tiene vendedor asignado).',
+    sql:()=>`SELECT v.VentaID, e.NombreEmpleado FROM Ventas v LEFT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
+  {id:'l3e3', level:3, pill:'left', main:'Ventas',
+    secondary:[{table:'Garantias', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'LEFT'}],
+    text:()=>'Encuentra las ventas que NO tienen garantía registrada.',
+    sql:()=>`SELECT v.VentaID FROM Ventas v LEFT JOIN Garantias g ON v.VentaID=g.VentaID WHERE g.GarantiaID IS NULL`},
+  {id:'l3e4', level:3, pill:'left', main:'Inventario',
+    secondary:[{table:'Ventas', from:'Inventario', onFrom:'InventarioID', onTo:'InventarioID', type:'LEFT'}],
+    text:()=>'Encuentra las unidades de inventario que nunca se han vendido (siguen en stock).',
+    sql:()=>`SELECT i.VIN FROM Inventario i LEFT JOIN Ventas v ON i.InventarioID=v.InventarioID WHERE v.VentaID IS NULL`},
+  {id:'l3e5', level:3, pill:'left', main:'Empleados',
+    secondary:[{table:'Ventas', from:'Empleados', onFrom:'EmpleadoID', onTo:'VendedorID', type:'LEFT'}],
+    text:()=>'Muestra cada empleado y el VentaID de las ventas que ha hecho (NULL si nunca ha vendido).',
+    sql:()=>`SELECT e.NombreEmpleado, v.VentaID FROM Empleados e LEFT JOIN Ventas v ON e.EmpleadoID=v.VendedorID`},
+  {id:'l3e6', level:3, pill:'left', main:'Ventas',
+    secondary:[{table:'Facturas', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'LEFT'}],
+    text:()=>'Encuentra las ventas que todavía no tienen factura generada.',
+    sql:()=>`SELECT v.VentaID FROM Ventas v LEFT JOIN Facturas f ON v.VentaID=f.VentaID WHERE f.FacturaID IS NULL`},
+  {id:'l3e7', level:3, pill:'left', main:'Facturas',
+    secondary:[{table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'LEFT'}],
+    text:()=>'Encuentra las facturas que aún no se han pagado.',
+    sql:()=>`SELECT f.FacturaID FROM Facturas f LEFT JOIN Pagos p ON f.FacturaID=p.FacturaID WHERE p.PagoID IS NULL`},
+  {id:'l3e8', level:3, pill:'left', main:'Cotizaciones',
+    secondary:[{table:'Ventas', from:'Cotizaciones', onFrom:'ClienteID', onTo:'ClienteID', type:'LEFT'}],
+    text:()=>'Encuentra las cotizaciones de clientes que nunca llegaron a comprar (para hacerles seguimiento).',
+    sql:()=>`SELECT co.CotizacionID FROM Cotizaciones co LEFT JOIN Ventas v ON co.ClienteID=v.ClienteID WHERE v.VentaID IS NULL`},
 
-            renderizarEjercicio();
-        }
+  // NIVEL 4 — RIGHT / FULL OUTER (6)
+  {id:'l4e1', level:4, pill:'right', main:'Ventas',
+    secondary:[{table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los empleados y su VentaID cuando exista (incluye a los que nunca han vendido). Parte de Ventas y usa RIGHT JOIN.',
+    sql:()=>`SELECT e.NombreEmpleado, v.VentaID FROM Ventas v RIGHT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
+  {id:'l4e2', level:4, pill:'full', main:'Ventas',
+    secondary:[{table:'Facturas', from:'Ventas', onFrom:'VentaID', onTo:'VentaID', type:'FULL'}],
+    text:()=>'Auditoría: encuentra ventas sin factura y facturas sin venta asociada (VentaID o FacturaID nulo).',
+    sql:()=>`SELECT v.VentaID, f.FacturaID FROM Ventas v FULL OUTER JOIN Facturas f ON v.VentaID=f.VentaID WHERE v.VentaID IS NULL OR f.FacturaID IS NULL`},
+  {id:'l4e3', level:4, pill:'right', main:'Ordenes_Servicio',
+    secondary:[{table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los clientes y su OrdenID de servicio cuando exista (incluye a los que nunca han llevado su auto a servicio). Parte de Ordenes_Servicio y usa RIGHT JOIN.',
+    sql:()=>`SELECT c.NombreCompleto, os.OrdenID FROM Ordenes_Servicio os RIGHT JOIN Clientes c ON os.ClienteID=c.ClienteID`},
+  {id:'l4e4', level:4, pill:'right', main:'Ventas',
+    secondary:[{table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'RIGHT'}],
+    text:()=>'Muestra TODAS las unidades de inventario y su VentaID cuando se hayan vendido (incluye las que siguen en stock). Parte de Ventas y usa RIGHT JOIN.',
+    sql:()=>`SELECT i.VIN, v.VentaID FROM Ventas v RIGHT JOIN Inventario i ON v.InventarioID=i.InventarioID`},
+  {id:'l4e5', level:4, pill:'right', main:'Cotizaciones',
+    secondary:[{table:'Empleados', from:'Cotizaciones', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los empleados y el CotizacionID de las cotizaciones que han hecho (incluye a los que nunca han cotizado). Parte de Cotizaciones y usa RIGHT JOIN.',
+    sql:()=>`SELECT e.NombreEmpleado, co.CotizacionID FROM Cotizaciones co RIGHT JOIN Empleados e ON co.EmpleadoID=e.EmpleadoID`},
+  {id:'l4e6', level:4, pill:'full', main:'Facturas',
+    secondary:[{table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'FULL'}],
+    text:()=>'Auditoría: encuentra facturas sin pago y pagos que no coincidan con ninguna factura.',
+    sql:()=>`SELECT f.FacturaID, p.PagoID FROM Facturas f FULL OUTER JOIN Pagos p ON f.FacturaID=p.FacturaID WHERE f.FacturaID IS NULL OR p.PagoID IS NULL`},
 
-        function cambiarEjercicio(direccion) {
-            const max = dbEjercicios[moduloActivo].length;
-            indiceActivo += direccion;
-            if (indiceActivo < 0) indiceActivo = max - 1;
-            if (indiceActivo >= max) indiceActivo = 0;
-            renderizarEjercicio();
-        }
+  // NIVEL 5 — CROSS / AUTO-JOIN (6)
+  {id:'l5e1', level:5, pill:'cross', main:'Cat_Agencias',
+    secondary:[{table:'Cat_Servicios', from:'Cat_Agencias', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera una matriz con todas las combinaciones posibles de Agencia + Tipo de Servicio.',
+    sql:()=>`SELECT a.NombreAgencia, s.TipoServicio FROM Cat_Agencias a CROSS JOIN Cat_Servicios s`},
+  {id:'l5e2', level:5, pill:'self', main:'Empleados',
+    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'LEFT', selfJoin:true}],
+    text:()=>'Muestra el nombre de cada empleado junto con el nombre de su jefe directo (si tiene). Une Empleados consigo misma.',
+    sql:()=>`SELECT emp.NombreEmpleado AS Empleado, jefe.NombreEmpleado AS Jefe FROM Empleados emp LEFT JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID`},
+  {id:'l5e3', level:5, pill:'cross', main:'Cat_Marcas',
+    secondary:[{table:'Cat_Agencias', from:'Cat_Marcas', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera todas las combinaciones posibles de Marca + Agencia (para planear qué marcas podría ofrecer cada sucursal).',
+    sql:()=>`SELECT ma.NombreMarca, a.NombreAgencia FROM Cat_Marcas ma CROSS JOIN Cat_Agencias a`},
+  {id:'l5e4', level:5, pill:'cross', main:'Cat_Refacciones',
+    secondary:[{table:'Cat_Servicios', from:'Cat_Refacciones', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera una matriz de todas las combinaciones de Refacción + Tipo de Servicio.',
+    sql:()=>`SELECT r.NombreRefaccion, s.TipoServicio FROM Cat_Refacciones r CROSS JOIN Cat_Servicios s`},
+  {id:'l5e5', level:5, pill:'self', main:'Empleados',
+    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'INNER', selfJoin:true}],
+    text:()=>'Muestra solo los empleados que SÍ tienen un jefe asignado, junto con el nombre de su jefe (usa INNER en vez de LEFT).',
+    sql:()=>`SELECT emp.NombreEmpleado AS Empleado, jefe.NombreEmpleado AS Jefe FROM Empleados emp INNER JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID`},
+  {id:'l5e6', level:5, pill:'self', main:'Empleados',
+    secondary:[{table:'Empleados', from:'Empleados', onFrom:'JefeID', onTo:'EmpleadoID', type:'LEFT', selfJoin:true}],
+    text:()=>'Encuentra los empleados que NO tienen jefe asignado (los gerentes de más alto nivel).',
+    sql:()=>`SELECT emp.NombreEmpleado FROM Empleados emp LEFT JOIN Empleados jefe ON emp.JefeID=jefe.EmpleadoID WHERE jefe.EmpleadoID IS NULL`},
 
-        function renderizarEjercicio() {
-            const data = dbEjercicios[moduloActivo][indiceActivo];
-            const max = dbEjercicios[moduloActivo].length;
+  // NIVEL 6 — Tabla puente y combinaciones (6)
+  {id:'l6e1', level:6, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[
+      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'}
+    ],
+    text:()=>'Para cada orden de servicio, cuenta cuántas refacciones distintas se usaron (usa GROUP BY).',
+    sql:()=>`SELECT os.OrdenID, COUNT(DISTINCT orf.RefaccionID) AS NumRefacciones FROM Ordenes_Servicio os INNER JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID GROUP BY os.OrdenID`},
+  {id:'l6e2', level:6, pill:'left', main:'Facturas',
+    secondary:[
+      {table:'Pagos', from:'Facturas', onFrom:'FacturaID', onTo:'FacturaID', type:'LEFT'},
+      {table:'Cat_MetodosPago', from:'Pagos', onFrom:'MetodoPagoID', onTo:'MetodoPagoID', type:'LEFT'}
+    ],
+    text:()=>'Muestra cada factura con el método de pago usado (NULL si todavía no se ha pagado).',
+    sql:()=>`SELECT f.FacturaID, mp.NombreMetodo FROM Facturas f LEFT JOIN Pagos p ON f.FacturaID=p.FacturaID LEFT JOIN Cat_MetodosPago mp ON p.MetodoPagoID=mp.MetodoPagoID`},
+  {id:'l6e3', level:6, pill:'inner', main:'Ordenes_Servicio',
+    secondary:[
+      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'INNER'},
+      {table:'Cat_Refacciones', from:'Ordenes_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+    ],
+    text:()=>'Muestra, para cada orden de servicio, el nombre de cada refacción usada (una fila por refacción).',
+    sql:()=>`SELECT os.OrdenID, r.NombreRefaccion FROM Ordenes_Servicio os INNER JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID INNER JOIN Cat_Refacciones r ON orf.RefaccionID=r.RefaccionID`},
+  {id:'l6e4', level:6, pill:'inner', main:'Cat_Refacciones',
+    secondary:[
+      {table:'Ordenes_Refacciones', from:'Cat_Refacciones', onFrom:'RefaccionID', onTo:'RefaccionID', type:'INNER'}
+    ],
+    text:()=>'¿Cuántas veces en total se ha usado cada refacción (suma de Cantidad)? Muestra el nombre de la refacción.',
+    sql:()=>`SELECT r.NombreRefaccion, SUM(orf.Cantidad) AS TotalUsado FROM Cat_Refacciones r INNER JOIN Ordenes_Refacciones orf ON r.RefaccionID=orf.RefaccionID GROUP BY r.RefaccionID, r.NombreRefaccion`},
+  {id:'l6e5', level:6, pill:'inner', main:'Ventas',
+    secondary:[
+      {table:'Clientes', from:'Ventas', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Inventario', from:'Ventas', onFrom:'InventarioID', onTo:'InventarioID', type:'INNER'},
+      {table:'Cat_Modelos', from:'Inventario', onFrom:'ModeloID', onTo:'ModeloID', type:'INNER'},
+      {table:'Empleados', from:'Ventas', onFrom:'VendedorID', onTo:'EmpleadoID', type:'LEFT'}
+    ],
+    text:()=>'Reporte completo: para cada venta muestra cliente, modelo y vendedor (NULL si no tiene vendedor asignado). Combina INNER y LEFT en la misma consulta.',
+    sql:()=>`SELECT c.NombreCompleto, m.NombreModelo, e.NombreEmpleado FROM Ventas v INNER JOIN Clientes c ON v.ClienteID=c.ClienteID INNER JOIN Inventario i ON v.InventarioID=i.InventarioID INNER JOIN Cat_Modelos m ON i.ModeloID=m.ModeloID LEFT JOIN Empleados e ON v.VendedorID=e.EmpleadoID`},
+  {id:'l6e6', level:6, pill:'left', main:'Ordenes_Servicio',
+    secondary:[
+      {table:'Clientes', from:'Ordenes_Servicio', onFrom:'ClienteID', onTo:'ClienteID', type:'INNER'},
+      {table:'Cat_Servicios', from:'Ordenes_Servicio', onFrom:'ServicioID', onTo:'ServicioID', type:'INNER'},
+      {table:'Empleados', from:'Ordenes_Servicio', onFrom:'EmpleadoID', onTo:'EmpleadoID', type:'INNER'},
+      {table:'Ordenes_Refacciones', from:'Ordenes_Servicio', onFrom:'OrdenID', onTo:'OrdenID', type:'LEFT'}
+    ],
+    text:()=>'Muestra cliente, tipo de servicio, empleado y cuántas refacciones se usaron por orden (0 si no usó ninguna).',
+    sql:()=>`SELECT cl.NombreCompleto, s.TipoServicio, e.NombreEmpleado, COUNT(orf.OrdenRefaccionID) AS NumRefacciones FROM Ordenes_Servicio os INNER JOIN Clientes cl ON os.ClienteID=cl.ClienteID INNER JOIN Cat_Servicios s ON os.ServicioID=s.ServicioID INNER JOIN Empleados e ON os.EmpleadoID=e.EmpleadoID LEFT JOIN Ordenes_Refacciones orf ON os.OrdenID=orf.OrdenID GROUP BY os.OrdenID, cl.NombreCompleto, s.TipoServicio, e.NombreEmpleado`}
+];
+exercises.forEach(e=>{ if(!e.genParams) e.genParams = ()=>({}); });
 
-            document.getElementById('ej-titulo').innerText = data.titulo;
-            document.getElementById('ej-objetivo').innerText = data.objetivo;
-            document.getElementById('ej-contador').innerText = `${indiceActivo + 1} / ${max === 1 ? '15 (Demo)' : max}`;
+let progress = {};
+function loadProgress(){ try{ progress = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ progress={}; } }
+function saveProgress(){ localStorage.setItem(LS_KEY, JSON.stringify(progress)); renderProgressBar(); renderLevelRow(); renderExMiniList(); }
+function renderProgressBar(){
+  const total = exercises.length;
+  const done = Object.values(progress).filter(Boolean).length;
+  document.getElementById('progressLabel').textContent = done+'/'+total+' ejercicios';
+  document.getElementById('progressFill').style.width = (total? done/total*100:0)+'%';
+}
+function levelDone(n){ return exercises.filter(e=>e.level===n).every(e=>progress[e.id]); }
+function levelUnlocked(n){ return n===1 || levelDone(n-1); }
 
-            // Renderizar Sub-Módulo Lógico
-            const panelLogica = document.getElementById('logica-contenedor');
-            panelLogica.innerHTML = '';
-            data.logica.forEach(item => {
-                panelLogica.innerHTML += `
-                    <div class="bg-slate-900 border border-slate-700 rounded p-2.5 shadow-sm">
-                        <strong class="text-indigo-400 block mb-0.5">${item.p}</strong>
-                        <p class="text-slate-300 leading-snug">${item.desc}</p>
-                    </div>
-                `;
-            });
+let currentLevel = 1;
+let currentExercise = null, currentParams = null, wizState = null;
 
-            // Llenar SQL Editor
-            document.getElementById('sql-editor').value = data.sql;
-            
-            // Limpiar tabla de resultados
-            document.getElementById('res-table-container').innerHTML = '<p class="text-xs text-slate-600 italic text-center mt-10">Esperando ejecución...</p>';
-            document.getElementById('res-count').innerText = "0 filas";
-            document.getElementById('feedback-msj').classList.add('hidden');
-        }
+// ---------------- INIT DB ----------------
+initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}` }).then(sql=>{
+  SQL = sql;
+  db = new SQL.Database();
+  db.run(schemaSQL);
+  db.run(seedSQL);
+  Object.keys(tableInfo).forEach(t=>{
+    const info = db.exec(`PRAGMA table_info(${t})`)[0];
+    tableColumns[t] = info ? info.values.map(r=>r[1]) : [];
+  });
+  loadProgress();
+  renderProgressBar();
+  buildTableGrid();
+  buildMap();
+  buildFreeTablePicker();
+  renderLevelRow();
+  renderExMiniList();
+  document.getElementById('editor').value = 'SELECT * FROM Clientes;';
+}).catch(err=>{
+  document.querySelector('main').innerHTML = '<div class="card"><h2>No se pudo cargar el motor SQL</h2><p>Revisa tu conexión a internet (esta app necesita descargar sql.js la primera vez). Error: '+err+'</p></div>';
+});
 
-        function resetearSQL() {
-            document.getElementById('sql-editor').value = dbEjercicios[moduloActivo][indiceActivo].sql;
-        }
+// ---------------- TABS ----------------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+document.getElementById('modeWizardBtn').addEventListener('click', ()=>{
+  document.getElementById('wizardMode').style.display='block';
+  document.getElementById('freeMode').style.display='none';
+  document.getElementById('modeWizardBtn').classList.remove('secondary');
+  document.getElementById('modeFreeBtn').classList.add('secondary');
+});
+document.getElementById('modeFreeBtn').addEventListener('click', ()=>{
+  document.getElementById('wizardMode').style.display='none';
+  document.getElementById('freeMode').style.display='block';
+  document.getElementById('modeFreeBtn').classList.remove('secondary');
+  document.getElementById('modeWizardBtn').classList.add('secondary');
+  document.getElementById('checkBtn').style.display='none';
+  currentExercise = null;
+  document.getElementById('feedback').innerHTML='';
+});
 
-        function ejecutarReto() {
-            const query = document.getElementById('sql-editor').value.trim();
-            const contenedor = document.getElementById('res-table-container');
-            const feedback = document.getElementById('feedback-msj');
-            const countLabel = document.getElementById('res-count');
+// ---------------- TABLAS tab ----------------
+function buildTableGrid(){
+  const grid = document.getElementById('tableGrid');
+  grid.innerHTML = '';
+  Object.keys(tableInfo).forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'table-btn';
+    b.innerHTML = `<b>${t}</b><small>${tableInfo[t]}</small>`;
+    b.addEventListener('click', ()=> { previewTable(t); highlightMapNode(t); });
+    grid.appendChild(b);
+  });
+}
+function previewTable(t){
+  const cols = db.exec(`PRAGMA table_info(${t})`)[0];
+  const data = db.exec(`SELECT * FROM ${t} LIMIT 8`)[0];
+  let html = `<div class="card"><h3>${t}</h3><p class="muted">Columnas: ${cols.values.map(r=>r[1]+' ('+r[2]+')').join(', ')}</p>`;
+  html += renderResultTable(data);
+  html += '</div>';
+  document.getElementById('tablePreview').innerHTML = html;
+}
 
-            feedback.classList.remove('hidden', 'bg-emerald-900', 'text-emerald-300', 'bg-red-900', 'text-red-300');
+// ---------------- MODO LIBRE: selector de tablas ----------------
+let freePicked = new Set();
+function buildFreeTablePicker(){
+  const wrap = document.getElementById('freeTablePicker');
+  wrap.innerHTML = '';
+  Object.keys(tableInfo).forEach(t=>{
+    const b = document.createElement('button');
+    b.className = 'table-pick';
+    b.textContent = t;
+    b.addEventListener('click', ()=>{
+      if(freePicked.has(t)) freePicked.delete(t); else freePicked.add(t);
+      b.classList.toggle('picked');
+      renderFreeTablesRef();
+    });
+    wrap.appendChild(b);
+  });
+}
+function renderFreeTablesRef(){
+  document.getElementById('freeTablesRef').innerHTML = [...freePicked].map(colRefCardHTML).join('');
+}
 
-            try {
-                const res = alasql(query);
-                
-                if (res.length === 0) {
-                    contenedor.innerHTML = '<p class="text-amber-400 text-center mt-10 text-xs">Consulta ejecutada, pero arrojó 0 resultados.</p>';
-                    countLabel.innerText = "0 filas";
-                    return;
-                }
+// ---------------- MAPA interactivo ----------------
+function buildMap(){
+  const edgesLayer = document.getElementById('edgesLayer');
+  const nodesLayer = document.getElementById('nodesLayer');
+  edgesLayer.innerHTML = ''; nodesLayer.innerHTML = '';
 
-                countLabel.innerText = `${res.length} filas`;
+  relationships.forEach((r,idx)=>{
+    const a = nodePos[r.from], b = nodePos[r.to];
+    if(!a||!b) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    if(r.from===r.to){
+      // self relation: small loop, draw as curved path instead
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const x=a.x, y=a.y;
+      path.setAttribute('d', `M ${x-70} ${y-18} C ${x-110} ${y-60}, ${x-30} ${y-60}, ${x-70} ${y-18}`);
+      path.setAttribute('stroke', '#4f8cff'); path.setAttribute('fill','none'); path.setAttribute('stroke-width','1.3'); path.setAttribute('opacity','0.75');
+      path.dataset.from = r.from; path.dataset.to = r.to; path.classList.add('edge');
+      edgesLayer.appendChild(path);
+      return;
+    }
+    line.setAttribute('x1', a.x); line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x); line.setAttribute('y2', b.y);
+    line.setAttribute('stroke', '#4f8cff'); line.setAttribute('stroke-width','1.3'); line.setAttribute('opacity','0.55');
+    line.setAttribute('marker-end','url(#arrow)');
+    line.dataset.from = r.from; line.dataset.to = r.to;
+    line.classList.add('edge');
+    edgesLayer.appendChild(line);
+  });
 
-                const cols = Object.keys(res[0]);
-                let html = '<table class="w-full text-left font-mono text-[11px] whitespace-nowrap"><thead class="bg-slate-900 text-emerald-400 border-b border-slate-700"><tr>';
-                cols.forEach(c => html += `<th class="p-2">${c}</th>`);
-                html += '</tr></thead><tbody class="divide-y divide-slate-800">';
+  Object.keys(nodePos).forEach(name=>{
+    const pos = nodePos[name];
+    const isFact = tableInfo[name].startsWith('Hechos') || tableInfo[name].startsWith('Tabla puente');
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.classList.add('node'); g.dataset.name = name; g.style.cursor='pointer';
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', pos.x-72); rect.setAttribute('y', pos.y-26);
+    rect.setAttribute('width', 144); rect.setAttribute('height', 42); rect.setAttribute('rx', 8);
+    rect.setAttribute('fill', isFact ? '#213a24' : '#1c2438');
+    rect.setAttribute('stroke', isFact ? '#8ee69f' : '#8eb2ff');
+    rect.classList.add('nodeRect');
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', pos.x); text.setAttribute('y', pos.y+4);
+    text.setAttribute('text-anchor','middle');
+    text.setAttribute('fill', isFact ? '#8ee69f' : '#8eb2ff');
+    text.setAttribute('font-weight','bold');
+    text.textContent = name;
+    g.appendChild(rect); g.appendChild(text);
+    g.addEventListener('click', ()=> { highlightMapNode(name); previewTable(name); });
+    nodesLayer.appendChild(g);
+  });
+}
+function highlightMapNode(name){
+  document.querySelectorAll('#nodesLayer .nodeRect').forEach(r=> r.setAttribute('opacity','0.28'));
+  document.querySelectorAll('#nodesLayer .node text').forEach(t=> t.setAttribute('opacity','0.35'));
+  document.querySelectorAll('#edgesLayer .edge').forEach(e=> { e.setAttribute('opacity','0.08'); e.setAttribute('stroke-width','1'); });
 
-                res.forEach(row => {
-                    html += '<tr class="hover:bg-slate-800 transition">';
-                    cols.forEach(c => {
-                        const val = row[c];
-                        if (val === null || val === undefined) {
-                            html += `<td class="p-2"><span class="bg-red-900/50 text-red-400 font-bold px-1 rounded">NULL</span></td>`;
-                        } else {
-                            html += `<td class="p-2 text-slate-300">${val}</td>`;
-                        }
-                    });
-                    html += '</tr>';
-                });
-                html += '</tbody></table>';
+  const related = relatedOf(name);
+  const connectedNames = new Set([name]);
+  related.forEach(r=>{ connectedNames.add(r.from); connectedNames.add(r.to); });
 
-                contenedor.innerHTML = html;
-                feedback.classList.add('bg-emerald-900', 'text-emerald-300');
-                feedback.innerHTML = `✅ ¡Consulta ejecutada sin errores de sintaxis! Revisa la tabla de resultados.`;
+  document.querySelectorAll('#nodesLayer .node').forEach(g=>{
+    if(connectedNames.has(g.dataset.name)){
+      g.querySelector('.nodeRect').setAttribute('opacity','1');
+      g.querySelector('text').setAttribute('opacity','1');
+    }
+  });
+  document.querySelectorAll('#edgesLayer .edge').forEach(e=>{
+    if(e.dataset.from===name || e.dataset.to===name){
+      e.setAttribute('opacity','1'); e.setAttribute('stroke-width','2.4'); e.setAttribute('stroke','#38d996');
+    } else {
+      e.setAttribute('stroke','#4f8cff');
+    }
+  });
 
-            } catch (error) {
-                contenedor.innerHTML = '';
-                countLabel.innerText = "Error";
-                feedback.classList.add('bg-red-900', 'text-red-300');
-                feedback.innerHTML = `❌ <b>ERROR SQL:</b> ${error.message}`;
-            }
-        }
+  const detail = document.getElementById('mapDetail');
+  detail.style.display = 'block';
+  let lines = related.map(r=>{
+    if(r.from===name) return `→ se conecta con <b>${r.to}</b> usando <code>${name}.${r.field} = ${r.to}.${r.toField}</code>`;
+    return `→ <b>${r.from}</b> se conecta con esta tabla usando <code>${r.from}.${r.field} = ${name}.${r.toField}</code>`;
+  });
+  detail.innerHTML = `<b>${name}</b><br>${lines.join('<br>') || 'Sin relaciones directas.'}`;
+}
 
-        // Init
-        window.onload = () => {
-            inicializarERP();
-            cargarModulo('inner');
-        };
-    </script>
+// ---------------- NIVELES / LISTA EJERCICIOS ----------------
+function renderLevelRow(){
+  const row = document.getElementById('levelRow');
+  row.innerHTML = '';
+  levels.forEach(lv=>{
+    const unlocked = levelUnlocked(lv.n);
+    const done = exercises.filter(e=>e.level===lv.n).filter(e=>progress[e.id]).length;
+    const total = exercises.filter(e=>e.level===lv.n).length;
+    const btn = document.createElement('button');
+    btn.className = 'level-btn' + (lv.n===currentLevel?' active':'') + (unlocked?'':' locked');
+    btn.innerHTML = `${lv.name}<span class="lv-progress">${unlocked? done+'/'+total+' completados' : '🔒 completa el nivel anterior'}</span>`;
+    if(unlocked) btn.addEventListener('click', ()=>{ currentLevel = lv.n; renderLevelRow(); renderExMiniList(); });
+    row.appendChild(btn);
+  });
+}
+function renderExMiniList(){
+  const wrap = document.getElementById('exMiniList');
+  wrap.innerHTML = '';
+  exercises.filter(e=>e.level===currentLevel).forEach((ex,i)=>{
+    const b = document.createElement('button');
+    b.className = 'ex-mini' + (progress[ex.id]?' done':'') + (currentExercise&&currentExercise.id===ex.id?' active':'');
+    b.textContent = 'Ejercicio ' + (i+1);
+    b.addEventListener('click', ()=> startWizard(ex));
+    wrap.appendChild(b);
+  });
+}
+
+// ---------------- WIZARD ----------------
+function startWizard(ex){
+  currentExercise = ex;
+  currentParams = ex.genParams();
+  wizState = { step:0, mainPicked:null, secPicked:[], joinAnswers:{}, aliases:{} };
+  document.getElementById('wizCard').style.display = 'block';
+  document.getElementById('wizQuestion').textContent = ex.text(currentParams);
+  document.getElementById('checkBtn').style.display = 'none';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('resultWrap').innerHTML = '';
+  document.getElementById('editor').value = '';
+  renderExMiniList();
+  const involved = [ex.main, ...ex.secondary.map(s=>s.table)];
+  document.getElementById('wizTablesRef').innerHTML = [...new Set(involved)].map(colRefCardHTML).join('');
+  renderWizStep();
+}
+
+function renderWizProgress(){
+  const totalSteps = 5;
+  const wrap = document.getElementById('wizProgress');
+  wrap.innerHTML = '';
+  for(let i=0;i<totalSteps;i++){
+    const d = document.createElement('div');
+    d.className = 'wiz-dot' + (i<wizState.step?' done':'') + (i===wizState.step?' current':'');
+    wrap.appendChild(d);
+  }
+}
+
+function allTableNames(){ return Object.keys(tableInfo); }
+
+function renderWizStep(){
+  renderWizProgress();
+  document.querySelectorAll('.wiz-step').forEach(s=> s.classList.toggle('active', Number(s.dataset.step)===wizState.step));
+  document.getElementById('wizBackBtn').style.display = wizState.step>0 ? 'inline-block' : 'none';
+
+  if(wizState.step===0) renderStepMain();
+  if(wizState.step===1) renderStepSecondary();
+  if(wizState.step===2) renderStepJoins();
+  if(wizState.step===3) renderStepAlias();
+  if(wizState.step===4) renderStepFinal();
+}
+document.getElementById('wizBackBtn').addEventListener('click', ()=>{ wizState.step = Math.max(0, wizState.step-1); renderWizStep(); });
+
+function renderStepMain(){
+  const wrap = document.getElementById('stepMainOpts');
+  wrap.innerHTML = '';
+  const options = shuffle([currentExercise.main, ...randDistinct(allTableNames(), currentExercise.main, 3)]);
+  options.forEach(name=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = name;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#stepMainOpts .opt-btn').forEach(x=>x.classList.remove('picked','correct','wrong'));
+      if(name===currentExercise.main){
+        b.classList.add('correct');
+        setTimeout(()=>{ wizState.mainPicked=name; wizState.step=1; renderWizStep(); }, 350);
+      } else {
+        b.classList.add('wrong');
+      }
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function renderStepSecondary(){
+  document.getElementById('mainTableEcho').textContent = currentExercise.main;
+  const wrap = document.getElementById('stepSecOpts');
+  wrap.innerHTML = '';
+  const correctSet = new Set(currentExercise.secondary.map(s=>s.table));
+  const distractors = randDistinct(allTableNames(), currentExercise.main, 2, [...correctSet]);
+  const options = shuffle([...correctSet, ...distractors]);
+  wizState.secPicked = [];
+  options.forEach(name=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = name;
+    b.addEventListener('click', ()=>{
+      b.classList.toggle('picked');
+      if(wizState.secPicked.includes(name)) wizState.secPicked = wizState.secPicked.filter(x=>x!==name);
+      else wizState.secPicked.push(name);
+    });
+    wrap.appendChild(b);
+  });
+  document.getElementById('confirmSecBtn').onclick = ()=>{
+    const picked = new Set(wizState.secPicked);
+    const isEqual = picked.size===correctSet.size && [...correctSet].every(x=>picked.has(x));
+    if(isEqual){ wizState.step=2; renderWizStep(); }
+    else {
+      alert('No es la selección correcta todavía. Piensa: ¿qué tabla tiene el dato que te piden mostrar o filtrar? Vuelve a intentar.');
+    }
+  };
+}
+
+function renderStepJoins(){
+  const wrap = document.getElementById('joinStepsWrap');
+  wrap.innerHTML = '';
+  currentExercise.secondary.forEach((sec,i)=>{
+    const box = document.createElement('div');
+    box.className = 'card';
+    box.style.margin = '10px 0';
+    box.innerHTML = `<h3 style="margin-top:0;">${i+1}. ${sec.table}</h3>`;
+
+    if(sec.type!=='CROSS'){
+      const fieldWrap = document.createElement('div');
+      fieldWrap.innerHTML = `<p class="muted">¿Con qué campo se conecta <b>${sec.table}</b> desde <b>${sec.from}</b>?</p>`;
+      const opts = document.createElement('div'); opts.className='opt-grid';
+      const correctLabel = `${sec.from}.${sec.onFrom} = ${sec.table}.${sec.onTo}`;
+      const cols1 = tableColumns[sec.from] ? tableColumns[sec.from].filter(c=>c!==sec.onFrom && /ID$/.test(c)) : [];
+      const cols2 = tableColumns[sec.table] ? tableColumns[sec.table].filter(c=>c!==sec.onTo && /ID$/.test(c)) : [];
+      const distractorLabels = [];
+      if(cols1[0]) distractorLabels.push(`${sec.from}.${cols1[0]} = ${sec.table}.${sec.onTo}`);
+      if(cols2[0]) distractorLabels.push(`${sec.from}.${sec.onFrom} = ${sec.table}.${cols2[0]}`);
+      const fieldOptions = shuffle([correctLabel, ...distractorLabels.slice(0,2)]);
+      fieldOptions.forEach(lbl=>{
+        const b = document.createElement('button'); b.className='opt-btn'; b.textContent=lbl;
+        b.addEventListener('click', ()=>{
+          fieldWrap.querySelectorAll('.opt-btn').forEach(x=>x.classList.remove('correct','wrong'));
+          if(lbl===correctLabel){ b.classList.add('correct'); wizState.joinAnswers[sec.table]=wizState.joinAnswers[sec.table]||{}; wizState.joinAnswers[sec.table].field=true; checkJoinsComplete(); }
+          else { b.classList.add('wrong'); }
+        });
+        opts.appendChild(b);
+      });
+      fieldWrap.appendChild(opts);
+      box.appendChild(fieldWrap);
+    } else {
+      wizState.joinAnswers[sec.table] = wizState.joinAnswers[sec.table]||{}; wizState.joinAnswers[sec.table].field = true;
+      box.innerHTML += `<p class="muted">CROSS JOIN no usa <code>ON</code> — combina todas las filas con todas.</p>`;
+    }
+
+    const typeWrap = document.createElement('div');
+    typeWrap.innerHTML = `<p class="muted" style="margin-top:10px;">¿Qué tipo de JOIN es?</p>`;
+    const typeOpts = document.createElement('div'); typeOpts.className='opt-grid';
+    ['INNER','LEFT','RIGHT','FULL','CROSS'].forEach(t=>{
+      const b = document.createElement('button'); b.className='opt-btn'; b.textContent=t+' JOIN';
+      b.addEventListener('click', ()=>{
+        typeWrap.querySelectorAll('.opt-btn').forEach(x=>x.classList.remove('correct','wrong'));
+        if(t===sec.type){ b.classList.add('correct'); wizState.joinAnswers[sec.table]=wizState.joinAnswers[sec.table]||{}; wizState.joinAnswers[sec.table].type=true; checkJoinsComplete(); }
+        else b.classList.add('wrong');
+      });
+      typeOpts.appendChild(b);
+    });
+    typeWrap.appendChild(typeOpts);
+    box.appendChild(typeWrap);
+    wrap.appendChild(box);
+  });
+}
+function checkJoinsComplete(){
+  const allDone = currentExercise.secondary.every(sec=>{
+    const a = wizState.joinAnswers[sec.table];
+    return a && a.field && a.type;
+  });
+  if(allDone){ setTimeout(()=>{ wizState.step=3; renderWizStep(); }, 400); }
+}
+
+function renderStepAlias(){
+  const wrap = document.getElementById('aliasWrap');
+  wrap.innerHTML = '';
+  const tables = [currentExercise.main, ...currentExercise.secondary.map(s=>s.table)];
+  const uniqueTables = [...new Set(tables)];
+  uniqueTables.forEach((t,i)=>{
+    const row = document.createElement('div'); row.className='alias-row';
+    row.innerHTML = `<span style="width:180px;">${t}${tables.filter(x=>x===t).length>1?' <span class="muted">(self-join, usa 2 alias distintos)</span>':''}</span> AS <input type="text" data-table="${t}" data-idx="${i}" maxlength="6" placeholder="alias">`;
+    wrap.appendChild(row);
+  });
+  document.getElementById('aliasFeedback').innerHTML = '';
+  document.getElementById('confirmAliasBtn').onclick = ()=>{
+    const inputs = [...wrap.querySelectorAll('input')];
+    const vals = inputs.map(i=>i.value.trim());
+    const fb = document.getElementById('aliasFeedback');
+    if(vals.some(v=>!v)){ fb.innerHTML = '<div class="feedback bad">Todos los campos de alias deben tener un valor.</div>'; return; }
+    if(vals.some(v=>/[^a-zA-Z0-9_]/.test(v))){ fb.innerHTML = '<div class="feedback bad">Los alias solo deben tener letras, números o guión bajo, sin espacios.</div>'; return; }
+    const lower = vals.map(v=>v.toLowerCase());
+    if(new Set(lower).size !== lower.length){ fb.innerHTML = '<div class="feedback bad">Cada alias debe ser único, no puedes repetir el mismo para dos tablas.</div>'; return; }
+    inputs.forEach(i=> wizState.aliases[i.dataset.table+'#'+i.dataset.idx] = i.value.trim());
+    fb.innerHTML = '<div class="feedback ok">✅ Buenos alias. Recuerda usarlos delante de cada columna ambigua en tu SELECT.</div>';
+    setTimeout(()=>{ wizState.step=4; renderWizStep(); }, 500);
+  };
+}
+
+function renderStepFinal(){
+  const ex = currentExercise;
+  const aliasList = Object.keys(wizState.aliases).map(k=> ({table:k.split('#')[0], alias:wizState.aliases[k]}));
+  let mainAlias = aliasList[0] ? aliasList[0].alias : 'a1';
+  let skeleton = `FROM ${ex.main} AS ${mainAlias}\n`;
+  ex.secondary.forEach((sec,i)=>{
+    const aliasEntry = aliasList[i+1] || aliasList[aliasList.length-1];
+    const al = aliasEntry ? aliasEntry.alias : 'a'+(i+2);
+    if(sec.type==='CROSS'){
+      skeleton += `CROSS JOIN ${sec.table} AS ${al}\n`;
+    } else {
+      const fromAlias = sec.from===ex.main ? mainAlias : (aliasList.find(a=>a.table===sec.from)?.alias || mainAlias);
+      skeleton += `${sec.type} JOIN ${sec.table} AS ${al}\n    ON ${fromAlias}.${sec.onFrom} = ${al}.${sec.onTo}\n`;
+    }
+  });
+  const fullSkeleton = 'SELECT   -- completa aquí tus columnas\n' + skeleton + '-- agrega WHERE / GROUP BY si el enunciado lo pide';
+  document.getElementById('skeletonBox').textContent = fullSkeleton;
+  document.getElementById('checkBtn').style.display = 'inline-block';
+  document.getElementById('copySkeletonBtn').onclick = ()=>{
+    document.getElementById('editor').value = fullSkeleton;
+    document.getElementById('editor').focus();
+  };
+}
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+function randDistinct(pool, exclude, n, alsoExclude){
+  const ex = new Set([exclude, ...(alsoExclude||[])]);
+  const filtered = pool.filter(x=>!ex.has(x));
+  return shuffle(filtered).slice(0,n);
+}
+
+// ---------------- EDITOR / RUN / CHECK (compartido) ----------------
+function renderResultTable(res){
+  if(!res || !res.values.length) return '<p class="muted">Sin resultados.</p>';
+  let html = '<table class="result"><thead><tr>' + res.columns.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  res.values.forEach(row=>{
+    html += '<tr>' + row.map(v=> `<td>${v===null?'<i style="color:#666">NULL</i>':v}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+document.getElementById('runBtn').addEventListener('click', ()=>{
+  const sql = document.getElementById('editor').value.trim();
+  const fb = document.getElementById('feedback');
+  const wrap = document.getElementById('resultWrap');
+  fb.innerHTML = '';
+  if(!sql){ wrap.innerHTML=''; return; }
+  try{
+    const res = db.exec(sql);
+    if(!res.length){
+      wrap.innerHTML = '<p class="muted">La consulta se ejecutó sin errores pero no devuelve una tabla de resultados.</p>';
+    } else {
+      wrap.innerHTML = renderResultTable(res[0]);
+    }
+  }catch(e){
+    wrap.innerHTML = '';
+    fb.innerHTML = `<div class="feedback err">⚠️ Error de SQL: ${e.message}\n\nRevisa: ¿escribiste bien el nombre de la tabla/columna? ¿falta una coma o el ON del JOIN?</div>`;
+  }
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  document.getElementById('editor').value = '';
+  document.getElementById('resultWrap').innerHTML = '';
+  document.getElementById('feedback').innerHTML = '';
+});
+function rowsMultisetEqual(a, b){
+  if(a.length !== b.length) return false;
+  const count = arr => { const m={}; arr.forEach(r=>{ const k=JSON.stringify(r); m[k]=(m[k]||0)+1; }); return m; };
+  return JSON.stringify(count(a)) === JSON.stringify(count(b));
+}
+document.getElementById('checkBtn').addEventListener('click', ()=>{
+  if(!currentExercise) return;
+  const sql = document.getElementById('editor').value.trim();
+  const fb = document.getElementById('feedback');
+  const wrap = document.getElementById('resultWrap');
+  if(!sql){ fb.innerHTML = '<div class="feedback bad">Escribe una consulta antes de verificar.</div>'; return; }
+  let userRes, expectedRes;
+  try{ userRes = db.exec(sql); }
+  catch(e){ fb.innerHTML = `<div class="feedback err">⚠️ Tu consulta tiene un error de sintaxis: ${e.message}</div>`; return; }
+  if(!userRes.length){ fb.innerHTML = '<div class="feedback bad">Tu consulta no devolvió una tabla (¿es un SELECT?).</div>'; return; }
+  wrap.innerHTML = renderResultTable(userRes[0]);
+  try{ expectedRes = db.exec(currentExercise.sql(currentParams))[0]; }
+  catch(e){ fb.innerHTML = '<div class="feedback err">Error interno generando la solución de referencia.</div>'; return; }
+  const userRows = userRes[0].values, expRows = expectedRes.values;
+  if(userRows.length !== expRows.length){
+    fb.innerHTML = `<div class="feedback bad">Tu consulta devolvió ${userRows.length} fila(s), se esperaban ${expRows.length}.\n\n¿Te falta o te sobra un JOIN? ¿Revisaste bien el WHERE?</div>`;
+    return;
+  }
+  if(!rowsMultisetEqual(userRows, expRows)){
+    fb.innerHTML = `<div class="feedback bad">El número de filas coincide, pero los datos no son iguales.\n\nRevisa: ¿seleccionaste las columnas correctas? ¿el orden de las columnas en tu SELECT coincide con lo que se pide?</div>`;
+    return;
+  }
+  progress[currentExercise.id] = true;
+  saveProgress();
+  fb.innerHTML = '<div class="feedback ok">✅ ¡Correcto! Tu lógica de JOIN es la esperada para este caso. Elige el siguiente ejercicio de la lista.</div>';
+});
+</script>
 </body>
 </html>
