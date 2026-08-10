@@ -1,193 +1,694 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aprende SQL Joins - Simulador Interactivo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprende SQL JOINs — Dr. Código</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+  <style>
+    .glass-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+    }
+    .fade-in {
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    ::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #a5b4fc;
+      border-radius: 4px;
+    }
+    .drawer-transition {
+      transition: transform 0.3s ease-in-out;
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-    <div class="max-w-5xl mx-auto">
-        <header class="mb-8 text-center border-b border-slate-700 pb-6">
-            <h1 class="text-3xl md:text-4xl font-bold text-emerald-400 mb-2">⚡ Aprende SQL Joins</h1>
-            <p class="text-slate-400 text-base">Masterclass Interactiva &amp; Desglose Paso a Paso</p>
-        </header>
+  <div id="drawer-overlay" onclick="toggleDrawer(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
 
-        <nav class="flex flex-wrap gap-2 mb-6 border-b border-slate-700 pb-3" id="tabs-container">
-            <button onclick="cambiarReto(1)" id="tab-1" class="tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition">Reto 1: LEFT JOIN</button>
-            <button onclick="cambiarReto(2)" id="tab-2" class="tab-btn bg-slate-800 text-slate-400 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium transition">Reto 2: INNER JOIN</button>
-            <button onclick="cambiarReto(3)" id="tab-3" class="tab-btn bg-slate-800 text-slate-400 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium transition">Reto 3: RIGHT JOIN</button>
-        </nav>
-
-        <section class="bg-slate-800/80 border border-slate-700 rounded-xl p-5 mb-6">
-            <details class="group" open>
-                <summary class="flex justify-between items-center font-bold text-lg text-emerald-300 cursor-pointer list-none">
-                    <span>🩺 Descomposición Quirúrgica del Ejercicio</span>
-                    <span class="transition group-open:rotate-180">▼</span>
-                </summary>
-                <div class="mt-4 text-slate-300 text-sm leading-relaxed space-y-3 border-t border-slate-700 pt-3" id="desglose-teorico">
-                    </div>
-            </details>
-        </section>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-100 mb-2" id="titulo-reto">Cargando Reto...</h2>
-                    <p class="text-slate-400 text-sm mb-4" id="desc-reto">Sigue las instrucciones para resolver la consulta.</p>
-
-                    <label for="codigo-sql" class="block text-xs font-semibold uppercase text-slate-400 mb-1">Escribe tu Consulta SQL:</label>
-                    <textarea id="codigo-sql" rows="6" class="w-full bg-slate-950 text-emerald-400 font-mono p-3 rounded-lg border border-slate-700 focus:outline-none focus:border-emerald-500 text-sm" spellcheck="false"></textarea>
-                </div>
-
-                <div class="mt-4 flex gap-3">
-                    <button onclick="ejecutarConsulta()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 px-4 rounded-lg transition shadow-lg">
-                        ▶ Ejecutar Consulta
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col">
-                <h3 class="text-lg font-bold text-slate-200 mb-3">Resultado de la Consulta</h3>
-                <div id="resultado-container" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg p-3 overflow-x-auto min-h-[200px] text-xs font-mono">
-                    <p class="text-slate-500 italic">Haz clic en "Ejecutar Consulta" para ver los datos...</p>
-                </div>
-            </div>
-
+  <aside id="drawer-menu" class="fixed top-0 left-0 bottom-0 w-72 md:w-80 bg-indigo-950 text-white z-50 drawer-transition -translate-x-full shadow-2xl flex flex-col justify-between">
+    <div>
+      <div class="p-4 bg-indigo-900 border-b border-indigo-800 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">🩺</span>
+          <div>
+            <h2 class="font-bold text-sm md:text-base leading-tight text-white">Dr. Código</h2>
+            <p class="text-[10px] md:text-xs text-indigo-300">Menú de Aprendizaje</p>
+          </div>
         </div>
+        <button onclick="toggleDrawer(false)" class="text-indigo-200 hover:text-white p-1.5 rounded-lg text-lg">✕</button>
+      </div>
+
+      <div class="p-4 border-b border-indigo-900/60 bg-indigo-900/30">
+        <div class="flex justify-between items-center text-xs mb-1.5">
+          <span class="text-indigo-200 font-medium">Progreso Global</span>
+          <span id="menu-progress-text" class="text-emerald-400 font-bold font-mono">0%</span>
+        </div>
+        <div class="w-full bg-indigo-950 rounded-full h-2 overflow-hidden border border-indigo-800">
+          <div id="menu-progress-bar" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <nav class="p-3 space-y-1 text-xs md:text-sm">
+        <button onclick="navTo('challenges')" id="menu-item-challenges" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 bg-indigo-800/80 text-white font-bold transition">
+          <span class="text-base md:text-lg">🎯</span>
+          <span>Casos Prácticos (Retos)</span>
+        </button>
+        <button onclick="navTo('lab')" id="menu-item-lab" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">💻</span>
+          <span>Consola SQL Libre</span>
+        </button>
+        <button onclick="navTo('tables')" id="menu-item-tables" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">🗄️</span>
+          <span>Ver Tablas de la BD</span>
+        </button>
+        <button onclick="navTo('modules')" id="menu-item-modules" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">📖</span>
+          <span>Lecciones Teóricas</span>
+        </button>
+      </nav>
     </div>
 
-    <script>
-        // Datos de los Retos y Desgloses Teóricos
-        const retos = {
-            1: {
-                titulo: "Reto 1: Clientes y sus Pedidos (LEFT JOIN)",
-                descripcion: "Obtén todos los clientes y sus pedidos asociados, incluyendo aquellos clientes que aún no han realizado compras.",
-                sqlInicial: "SELECT c.nombre, p.producto, p.monto\nFROM Clientes c\nLEFT JOIN Pedidos p ON c.id = p.id_cliente;",
-                desglose: `
-                    <p><strong>Paso 1 (Tabla Principal):</strong> Necesitamos la lista completa de <code>Clientes</code> (deben salir todos, compren o no).</p>
-                    <p><strong>Paso 2 (Alias):</strong> Asignamos <code>c</code> para Clientes y <code>p</code> para Pedidos.</p>
-                    <p><strong>Paso 3 (Tipo de JOIN):</strong> Usamos <code>LEFT JOIN</code> porque no queremos perder los clientes de la tabla izquierda que tienen 0 compras.</p>
-                    <p><strong>Paso 4 (Puente/Llaves):</strong> La conexión es <code>c.id = p.id_cliente</code>.</p>
-                `
-            },
-            2: {
-                titulo: "Reto 2: Compras Confirmadas (INNER JOIN)",
-                descripcion: "Obtén ÚNICAMENTE los clientes que tienen al menos un pedido registrado.",
-                sqlInicial: "SELECT c.nombre, p.producto, p.monto\nFROM Clientes c\nINNER JOIN Pedidos p ON c.id = p.id_cliente;",
-                desglose: `
-                    <p><strong>Paso 1 (Tabla Principal):</strong> Buscamos coincidencia exacta entre ambas tablas.</p>
-                    <p><strong>Paso 2 (Tipo de JOIN):</strong> Usamos <code>INNER JOIN</code> para descartar clientes sin compras y pedidos sin cliente.</p>
-                    <p><strong>Paso 3 (Puente/Llaves):</strong> Conexión <code>c.id = p.id_cliente</code>.</p>
-                `
-            },
-            3: {
-                titulo: "Reto 3: Análisis de Pedidos (RIGHT JOIN)",
-                descripcion: "Obtén todos los pedidos registrados y los datos de sus clientes si existen.",
-                sqlInicial: "SELECT c.nombre, p.producto, p.monto\nFROM Clientes c\nRIGHT JOIN Pedidos p ON c.id = p.id_cliente;",
-                desglose: `
-                    <p><strong>Paso 1 (Tabla Principal):</strong> La prioridad la tiene la tabla de la derecha (<code>Pedidos</code>).</p>
-                    <p><strong>Paso 2 (Tipo de JOIN):</strong> Usamos <code>RIGHT JOIN</code> para asegurar que ningún pedido se quede fuera de la consulta.</p>
-                `
-            }
-        };
+    <div class="p-4 border-t border-indigo-900 text-[11px] md:text-xs text-indigo-300 flex justify-between items-center">
+      <span>SQL JOINs v2.5 (Responsivo)</span>
+      <button onclick="resetAllProgress()" class="text-[10px] md:text-xs text-red-300 hover:text-red-100 underline">Reiniciar Progreso</button>
+    </div>
+  </aside>
 
-        let db = null;
-        let retoActual = 1;
+  <header class="bg-indigo-800 text-white p-3.5 md:p-4 sticky top-0 z-30 shadow-md">
+    <div class="flex justify-between items-center max-w-7xl mx-auto">
+      <div class="flex items-center space-x-3 md:space-x-4">
+        <button onclick="toggleDrawer(true)" class="p-1.5 md:p-2 rounded-lg bg-indigo-900/80 hover:bg-indigo-700 text-indigo-100 transition focus:outline-none">
+          <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <div>
+          <h1 id="header-section-title" class="font-bold text-sm md:text-lg leading-tight text-white">Casos Prácticos</h1>
+          <p class="text-[10px] md:text-xs text-indigo-200">Aprende SQL JOINs paso a paso</p>
+        </div>
+      </div>
+      
+      <span id="header-badge" class="bg-indigo-950 text-emerald-400 border border-indigo-700 text-[11px] md:text-xs px-3 py-1 rounded-full font-mono font-bold">
+        0% Completado
+      </span>
+    </div>
+  </header>
 
-        // Inicialización de la Base de Datos SQLite en WebAssembly
-        async function initDB() {
-            try {
-                const SQL = await initSqlJs({
-                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-                });
-                db = new SQL.Database();
+  <main class="max-w-7xl mx-auto p-3.5 md:p-6 space-y-4 md:space-y-6">
 
-                // Crear tablas y datos de prueba
-                db.run(`
-                    CREATE TABLE Clientes (id INT, nombre TEXT);
-                    INSERT INTO Clientes VALUES (101, 'Ana'), (102, 'Carlos'), (103, 'Beatriz'), (104, 'David');
+    <section id="sec-challenges" class="sec-content fade-in space-y-4 md:space-y-6">
 
-                    CREATE TABLE Pedidos (id INT, id_cliente INT, producto TEXT, monto INT);
-                    INSERT INTO Pedidos VALUES (1, 101, 'Laptop', 1200), (2, 101, 'Mouse', 25), (3, 102, 'Teclado', 80);
-                `);
+      <div class="bg-white rounded-xl border border-indigo-200 shadow-sm p-3.5 md:p-5 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <span class="font-bold text-xs md:text-sm text-indigo-950 flex items-center gap-1.5">
+            <span>🗄️</span> Tablas de la Base de Datos (Estructura SQL Real)
+          </span>
+          <span class="text-[10px] md:text-xs text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded font-semibold border border-indigo-100">3 Tablas Conectadas</span>
+        </div>
 
-                cambiarReto(1);
-            } catch (err) {
-                console.error("Error al inicializar la base de datos:", err);
-                document.getElementById('resultado-container').innerHTML = `<p class="text-red-400">Error de carga: ${err.message}</p>`;
-            }
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div class="rounded-lg border border-blue-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-blue-50 px-2.5 py-1.5 border-b border-blue-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-blue-900 flex items-center gap-1">
+                <span>🏙️</span> Tabla: Ciudades
+              </span>
+              <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_ciudad</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_ciudad <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">nombre_ciudad</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">1</td>
+                    <td class="p-1.5 md:p-2">Madrid</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">2</td>
+                    <td class="p-1.5 md:p-2">Bogotá</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">3</td>
+                    <td class="p-1.5 md:p-2">Lima</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-indigo-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-indigo-50 px-2.5 py-1.5 border-b border-indigo-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-indigo-900 flex items-center gap-1">
+                <span>👥</span> Tabla: Clientes
+              </span>
+              <div class="flex gap-1 text-[10px]">
+                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_ciudad</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">nombre</th>
+                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_ciudad <span class="text-emerald-600 font-bold">(FK)</span></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">101</td>
+                    <td class="p-1.5 md:p-2">Ana</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">102</td>
+                    <td class="p-1.5 md:p-2">Carlos</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">2</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">103</td>
+                    <td class="p-1.5 md:p-2">Elena</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">104</td>
+                    <td class="p-1.5 md:p-2">David</td>
+                    <td class="p-1.5 md:p-2 text-red-500 font-bold bg-red-50/50">NULL</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rounded-lg border border-emerald-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-emerald-50 px-2.5 py-1.5 border-b border-emerald-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-emerald-900 flex items-center gap-1">
+                <span>🛍️</span> Tabla: Pedidos
+              </span>
+              <div class="flex gap-1 text-[10px]">
+                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_pedido</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_cliente</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_pedido <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_cliente <span class="text-emerald-600 font-bold">(FK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">producto</th>
+                    <th class="p-1.5 md:p-2 font-bold">monto</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">501</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
+                    <td class="p-1.5 md:p-2">Laptop</td>
+                    <td class="p-1.5 md:p-2">$1200</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">502</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
+                    <td class="p-1.5 md:p-2">Mouse</td>
+                    <td class="p-1.5 md:p-2">$25</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">503</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">102</td>
+                    <td class="p-1.5 md:p-2">Teclado</td>
+                    <td class="p-1.5 md:p-2">$80</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">504</td>
+                    <td class="p-1.5 md:p-2 text-red-600 font-bold bg-red-50/50">999</td>
+                    <td class="p-1.5 md:p-2">Monitor</td>
+                    <td class="p-1.5 md:p-2">$300</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-2 overflow-x-auto pb-1 text-xs md:text-sm">
+        <button onclick="selectChallenge(1)" id="chal-tab-1" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-indigo-700 text-white border-indigo-700 shadow-sm transition">
+          Reto 1 (LEFT JOIN)
+        </button>
+        <button onclick="selectChallenge(2)" id="chal-tab-2" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 2 (INNER JOIN)
+        </button>
+        <button onclick="selectChallenge(3)" id="chal-tab-3" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 3 (Triple JOIN)
+        </button>
+        <button onclick="selectChallenge(4)" id="chal-tab-4" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 4 (GROUP BY + SUM)
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+        
+        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <span id="chal-badge" class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
+              Misión 1
+            </span>
+            <span id="chal-status" class="text-[10px] md:text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded">
+              ⏳ Pendiente
+            </span>
+          </div>
+
+          <h3 id="chal-title" class="font-bold text-sm md:text-base text-slate-900">Cargando caso...</h3>
+          <p id="chal-desc" class="text-xs md:text-sm text-slate-600 leading-relaxed">...</p>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-950 p-4 md:p-5 rounded-xl shadow-lg border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center text-xs md:text-sm">
+            <span class="font-bold text-indigo-300 flex items-center gap-1.5">
+              <span>✏️</span> Escribe tu Consulta SQL:
+            </span>
+            <button onclick="resetEditorQuery()" class="text-[11px] md:text-xs text-slate-400 hover:text-slate-200 underline">Restaurar Ejemplo</button>
+          </div>
+
+          <textarea id="sql-editor" rows="4" class="w-full bg-slate-900 text-emerald-400 font-mono text-xs md:text-sm p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed" placeholder="Escribe SELECT..."></textarea>
+
+          <div class="flex flex-wrap gap-1.5 text-[10px] md:text-xs font-mono">
+            <button onclick="insertSql('SELECT ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">SELECT</button>
+            <button onclick="insertSql('Clientes AS c ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Clientes c</button>
+            <button onclick="insertSql('Pedidos AS p ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Pedidos p</button>
+            <button onclick="insertSql('LEFT JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">LEFT JOIN</button>
+            <button onclick="insertSql('INNER JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">INNER JOIN</button>
+            <button onclick="insertSql('ON c.id = p.id_cliente ')" class="bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1 rounded hover:bg-emerald-900">ON c.id = p.id_cliente</button>
+          </div>
+
+          <button onclick="validateCurrentChallenge()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow-md transition">
+            <span>🚀</span>
+            <span>Validar Consulta y Ver Resultado</span>
+          </button>
+        </div>
+
+      </div>
+
+      <div id="result-feedback" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold leading-relaxed"></div>
+
+      <div id="result-table-box" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs md:text-sm text-slate-700 flex justify-between items-center">
+          <span>📊 Resultado Obtenido</span>
+          <span id="result-rows-count" class="bg-indigo-100 text-indigo-800 text-[11px] md:text-xs px-2.5 py-0.5 rounded-full font-mono">0 filas</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm font-mono">
+            <thead id="result-thead" class="bg-slate-100 text-slate-600 border-b text-[10px] md:text-xs"></thead>
+            <tbody id="result-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="sec-lab" class="sec-content hidden fade-in space-y-4">
+      <div class="bg-slate-900 text-white rounded-xl p-4 shadow-md space-y-1">
+        <h2 class="font-bold text-sm md:text-base text-emerald-400">💻 Consola SQL Libre</h2>
+        <p class="text-xs md:text-sm text-slate-300">
+          Escribe y ejecuta cualquier consulta SQL sobre las tablas reales en memoria.
+        </p>
+      </div>
+
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+        <textarea id="free-sql-input" rows="5" class="w-full bg-transparent text-emerald-400 font-mono text-xs md:text-sm focus:outline-none resize-none leading-relaxed" placeholder="SELECT * FROM Clientes;"></textarea>
+
+        <button onclick="runFreeQuery()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow">
+          <span>▶️</span>
+          <span>Ejecutar SQL</span>
+        </button>
+      </div>
+
+      <div id="free-msg" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold"></div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-50 p-3 border-b text-xs md:text-sm font-bold text-slate-700 flex justify-between">
+          <span>Resultado Consola</span>
+          <span id="free-count" class="text-[11px] md:text-xs bg-slate-200 px-2.5 py-0.5 rounded font-mono">0 filas</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm font-mono">
+            <thead id="free-thead" class="bg-slate-100 border-b"></thead>
+            <tbody id="free-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-tables" class="sec-content hidden fade-in space-y-4">
+      <div class="bg-indigo-900 text-white p-4 rounded-xl text-xs md:text-sm">
+        <h2 class="font-bold text-sm md:text-base text-emerald-300">🗄️ Detalle de Tablas en Memoria</h2>
+        <p class="text-xs text-indigo-200 mt-1">
+          Estructura y relaciones del esquema de base de datos.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 space-y-4 text-xs md:text-sm">
+        <div>
+          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">1. Ciudades (Tabla Principal)</h4>
+          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id_ciudad</code> (PK - Primary Key), <code>nombre_ciudad</code></p>
+        </div>
+        <div>
+          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">2. Clientes (Tabla Intermedia)</h4>
+          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id</code> (PK - Primary Key), <code>nombre</code>, <code>id_ciudad</code> (FK - Foreign Key hacia Ciudades)</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">3. Pedidos (Tabla de Transacciones)</h4>
+          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id_pedido</code> (PK - Primary Key), <code>id_cliente</code> (FK - Foreign Key hacia Clientes), <code>producto</code>, <code>monto</code></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-modules" class="sec-content hidden fade-in space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 space-y-4 text-xs md:text-sm">
+        <h3 class="font-bold text-sm md:text-base text-indigo-900">📚 Teoría de JOINs desde Cero</h3>
+        
+        <div class="space-y-3 text-slate-700">
+          <div class="p-3 bg-indigo-50/60 rounded-lg border border-indigo-100">
+            <strong class="text-indigo-900 block font-bold mb-1 text-xs md:text-sm">INNER JOIN (Coincidencia Exacta)</strong>
+            Devuelve únicamente las filas que tienen una coincidencia exacta de valores en ambas tablas (vía la llave PK = FK).
+          </div>
+          <div class="p-3 bg-blue-50/60 rounded-lg border border-blue-100">
+            <strong class="text-blue-900 block font-bold mb-1 text-xs md:text-sm">LEFT JOIN (Preserva la Tabla Izquierda)</strong>
+            Conserva absolutamente todas las filas de la tabla principal (izquierda). Si alguna fila no tiene pareja en la derecha, la rellena con <code>NULL</code>.
+          </div>
+          <div class="p-3 bg-purple-50/60 rounded-lg border border-purple-100">
+            <strong class="text-purple-900 block font-bold mb-1 text-xs md:text-sm">GROUP BY & SUM (Agrupaciones)</strong>
+            Agrupa las filas resultantes por un campo en común (por ejemplo, el nombre del cliente) para aplicar funciones matemáticas como la suma total (<code>SUM</code>) o el conteo (<code>COUNT</code>).
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // 1. BASE DE DATOS EN NAVEGADOR (AlaSQL)
+    function initDatabase() {
+      try {
+        alasql('CREATE TABLE IF NOT EXISTS Ciudades (id_ciudad INT, nombre_ciudad STRING)');
+        alasql('DELETE FROM Ciudades');
+        alasql("INSERT INTO Ciudades VALUES (1, 'Madrid'), (2, 'Bogotá'), (3, 'Lima')");
+
+        alasql('CREATE TABLE IF NOT EXISTS Clientes (id INT, nombre STRING, id_ciudad INT)');
+        alasql('DELETE FROM Clientes');
+        alasql("INSERT INTO Clientes VALUES (101, 'Ana', 1), (102, 'Carlos', 2), (103, 'Elena', 1), (104, 'David', NULL)");
+
+        alasql('CREATE TABLE IF NOT EXISTS Pedidos (id_pedido INT, id_cliente INT, producto STRING, monto INT)');
+        alasql('DELETE FROM Pedidos');
+        alasql("INSERT INTO Pedidos VALUES (501, 101, 'Laptop', 1200), (502, 101, 'Mouse', 25), (503, 102, 'Teclado', 80), (504, 999, 'Monitor', 300)");
+      } catch (e) {
+        console.error("Error BD:", e);
+      }
+    }
+
+    // 2. MENÚ LATERAL (DRAWER)
+    function toggleDrawer(open) {
+      const drawer = document.getElementById('drawer-menu');
+      const overlay = document.getElementById('drawer-overlay');
+      if (open) {
+        drawer.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        drawer.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function navTo(sectionId) {
+      toggleDrawer(false);
+      document.querySelectorAll('.sec-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+
+      const titles = {
+        challenges: 'Casos Prácticos',
+        lab: 'Consola SQL Libre',
+        tables: 'Tablas de la BD',
+        modules: 'Lecciones Teóricas'
+      };
+      document.getElementById('header-section-title').innerText = titles[sectionId] || 'Dr. Código';
+
+      ['challenges', 'lab', 'tables', 'modules'].forEach(id => {
+        const item = document.getElementById(`menu-item-${id}`);
+        if (id === sectionId) {
+          item.className = 'w-full text-left p-3 rounded-xl flex items-center space-x-3 bg-indigo-800/80 text-white font-bold transition';
+        } else {
+          item.className = 'w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition';
         }
+      });
+    }
 
-        // Cambiar entre Retos sin congelar la pantalla
-        function cambiarReto(numero) {
-            retoActual = numero;
-            const data = retos[numero];
+    // 3. RETOS Y CASOS PRÁCTICOS
+    const challengeList = {
+      1: {
+        badge: "Misión 1 — Básico",
+        title: "Caso 1: Lista de Todos los Clientes y sus Compras",
+        desc: "Marketing necesita ver la lista de <strong>TODOS los clientes</strong>, tengan o no pedidos registrados. Si un cliente no compró nada (como David o Elena), debe figurar con <code class='text-red-600 font-bold'>NULL</code>.",
+        defaultSql: "SELECT c.nombre, p.producto\nFROM Clientes AS c\nLEFT JOIN Pedidos AS p ON c.id = p.id_cliente;",
+        expectedRows: 5,
+        requiredKeyword: "LEFT JOIN",
+        hint: "Utiliza LEFT JOIN para mantener a los clientes de la izquierda sin pedidos."
+      },
+      2: {
+        badge: "Misión 2 — Filtro",
+        title: "Caso 2: Clientes con Compras Efectivas",
+        desc: "Contabilidad requiere solo la lista de clientes que <strong>SÍ han realizado al menos una compra</strong>. Excluye por completo a los clientes sin pedidos.",
+        defaultSql: "SELECT c.nombre, p.producto\nFROM Clientes AS c\nINNER JOIN Pedidos AS p ON c.id = p.id_cliente;",
+        expectedRows: 3,
+        requiredKeyword: "INNER JOIN",
+        hint: "Usa INNER JOIN para descartar los registros sin coincidencia."
+      },
+      3: {
+        badge: "Misión 3 — Avanzado",
+        title: "Caso 3: Reporte de 3 Tablas (Cliente + Ciudad + Pedido)",
+        desc: "Genera una consulta que muestre el <strong>nombre del cliente</strong>, el <strong>nombre de su ciudad</strong> y el <strong>producto</strong> que compró.",
+        defaultSql: "SELECT c.nombre, ciu.nombre_ciudad, p.producto\nFROM Clientes AS c\nJOIN Ciudades AS ciu ON c.id_ciudad = ciu.id_ciudad\nJOIN Pedidos AS p ON c.id = p.id_cliente;",
+        expectedRows: 3,
+        requiredKeyword: "Ciudades",
+        hint: "Encadena dos cláusulas JOIN consecutivas."
+      },
+      4: {
+        badge: "Misión 4 — Agregación",
+        title: "Caso 4: Total Dinámico Gastado por Cliente",
+        desc: "Calcula la <strong>suma del monto total (SUM)</strong> de las compras de cada cliente. Agrupa la información por nombre de cliente.",
+        defaultSql: "SELECT c.nombre, SUM(p.monto) AS total_gastado\nFROM Clientes AS c\nJOIN Pedidos AS p ON c.id = p.id_cliente\nGROUP BY c.nombre;",
+        expectedRows: 2,
+        requiredKeyword: "GROUP BY",
+        hint: "Combina SUM(p.monto) con GROUP BY c.nombre."
+      }
+    };
 
-            // Actualizar botones de pestañas
-            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-                if (idx + 1 === numero) {
-                    btn.className = "tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition shadow";
-                } else {
-                    btn.className = "tab-btn bg-slate-800 text-slate-400 hover:bg-slate-700 px-4 py-2 rounded-lg font-medium transition";
-                }
+    let activeChalId = 1;
+
+    function selectChallenge(id) {
+      activeChalId = id;
+      const c = challengeList[id];
+
+      document.getElementById('chal-badge').innerText = c.badge;
+      document.getElementById('chal-title').innerText = c.title;
+      document.getElementById('chal-desc').innerHTML = c.desc;
+      document.getElementById('sql-editor').value = c.defaultSql;
+
+      document.getElementById('result-feedback').classList.add('hidden');
+      document.getElementById('result-table-box').classList.add('hidden');
+
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById(`chal-tab-${i}`);
+        if (i === id) {
+          btn.className = 'chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-indigo-700 text-white border-indigo-700 shadow-sm transition';
+        } else {
+          btn.className = 'chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition';
+        }
+      }
+
+      updateStatusBadge();
+    }
+
+    function resetEditorQuery() {
+      document.getElementById('sql-editor').value = challengeList[activeChalId].defaultSql;
+    }
+
+    function insertSql(text) {
+      const area = document.getElementById('sql-editor');
+      const start = area.selectionStart;
+      const end = area.selectionEnd;
+      area.value = area.value.substring(0, start) + text + area.value.substring(end);
+      area.focus();
+      area.selectionStart = area.selectionEnd = start + text.length;
+    }
+
+    function validateCurrentChallenge() {
+      const chal = challengeList[activeChalId];
+      const sql = document.getElementById('sql-editor').value.trim();
+      const feedback = document.getElementById('result-feedback');
+      const tableBox = document.getElementById('result-table-box');
+      const thead = document.getElementById('result-thead');
+      const tbody = document.getElementById('result-tbody');
+      const rowsCountBadge = document.getElementById('result-rows-count');
+
+      feedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-red-100', 'text-red-900');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      try {
+        const res = alasql(sql);
+
+        if (Array.isArray(res) && res.length > 0) {
+          tableBox.classList.remove('hidden');
+          rowsCountBadge.innerText = `${res.length} filas`;
+
+          const cols = Object.keys(res[0]);
+          const hTr = document.createElement('tr');
+          cols.forEach(col => {
+            const th = document.createElement('th');
+            th.className = 'p-2 md:p-3 text-slate-700 font-bold';
+            th.innerText = col;
+            hTr.appendChild(th);
+          });
+          thead.appendChild(hTr);
+
+          res.forEach(row => {
+            const tr = document.createElement('tr');
+            cols.forEach(col => {
+              const td = document.createElement('td');
+              td.className = 'p-2 md:p-3';
+              const val = row[col];
+              if (val === null || val === undefined) {
+                td.innerHTML = `<span class="bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded text-[10px] md:text-xs">NULL</span>`;
+              } else {
+                td.innerText = val;
+              }
+              tr.appendChild(td);
             });
-
-            // Actualizar interfaz
-            document.getElementById('titulo-reto').innerText = data.titulo;
-            document.getElementById('desc-reto').innerText = data.descripcion;
-            document.getElementById('codigo-sql').value = data.sqlInicial;
-            document.getElementById('desglose-teorico').innerHTML = data.desglose;
-            
-            // Limpiar resultados anteriores
-            document.getElementById('resultado-container').innerHTML = '<p class="text-slate-500 italic">Haz clic en "Ejecutar Consulta" para probar...</p>';
+            tbody.appendChild(tr);
+          });
         }
 
-        // Ejecutar la consulta escrita por el usuario
-        function ejecutarConsulta() {
-            if (!db) {
-                alert("La base de datos aún se está cargando. Por favor espera 2 segundos.");
-                return;
-            }
+        const upperSql = sql.toUpperCase();
+        if (res.length === chal.expectedRows && upperSql.includes(chal.requiredKeyword.toUpperCase())) {
+          feedback.classList.add('bg-emerald-100', 'text-emerald-900');
+          feedback.innerHTML = `🎉 <strong>¡Caso Resuelto con Éxito!</strong> Tu consulta obtuvo las ${res.length} filas esperadas correctamente.`;
 
-            const query = document.getElementById('codigo-sql').value;
-            const container = document.getElementById('resultado-container');
-
-            try {
-                const res = db.exec(query);
-                if (res.length === 0) {
-                    container.innerHTML = '<p class="text-yellow-400">La consulta se ejecutó con éxito pero no devolvió filas.</p>';
-                    return;
-                }
-
-                const columns = res[0].columns;
-                const values = res[0].values;
-
-                let html = '<table class="w-full text-left border-collapse"><thead><tr class="border-b border-slate-700 text-emerald-400">';
-                columns.forEach(col => html += `<th class="p-2">${col}</th>`);
-                html += '</tr></thead><tbody>';
-
-                values.forEach(row => {
-                    html += '<tr class="border-b border-slate-800/50 hover:bg-slate-900/50">';
-                    row.forEach(val => {
-                        html += `<td class="p-2 ${val === null ? 'text-slate-600 italic' : 'text-slate-200'}">${val === null ? 'NULL' : val}</td>`;
-                    });
-                    html += '</tr>';
-                });
-
-                html += 'tbody></table>';
-                container.innerHTML = html;
-
-            } catch (err) {
-                container.innerHTML = `<p class="text-red-400 font-semibold">❌ Error de SQL:</p><p class="text-red-300 mt-1">${err.message}</p>`;
-            }
+          localStorage.setItem(`sql_done_chal_${activeChalId}`, 'true');
+          updateProgress();
+        } else {
+          feedback.classList.add('bg-red-100', 'text-red-900');
+          feedback.innerHTML = `⚠️ <strong>Respuesta Incompleta:</strong> Tu consulta devolvió ${res.length} filas. <br>💡 <em>Pista: ${chal.hint}</em>`;
         }
 
-        // Cargar base de datos al abrir la página
-        window.onload = initDB;
-    </script>
+      } catch (err) {
+        feedback.classList.add('bg-red-100', 'text-red-900');
+        feedback.innerHTML = `❌ <strong>Error de Sintaxis SQL:</strong> ${err.message}`;
+      }
+    }
+
+    function updateStatusBadge() {
+      const isDone = localStorage.getItem(`sql_done_chal_${activeChalId}`) === 'true';
+      const badge = document.getElementById('chal-status');
+      if (isDone) {
+        badge.innerText = '✅ Resuelto';
+        badge.className = 'text-[10px] md:text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded';
+      } else {
+        badge.innerText = '⏳ Pendiente';
+        badge.className = 'text-[10px] md:text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded';
+      }
+    }
+
+    function updateProgress() {
+      let completed = 0;
+      for (let i = 1; i <= 4; i++) {
+        if (localStorage.getItem(`sql_done_chal_${i}`) === 'true') completed++;
+      }
+      const percent = Math.round((completed / 4) * 100);
+
+      document.getElementById('header-badge').innerText = `${percent}% Completado`;
+      document.getElementById('menu-progress-text').innerText = `${percent}%`;
+      document.getElementById('menu-progress-bar').style.width = `${percent}%`;
+
+      updateStatusBadge();
+    }
+
+    function resetAllProgress() {
+      for (let i = 1; i <= 4; i++) {
+        localStorage.removeItem(`sql_done_chal_${i}`);
+      }
+      updateProgress();
+      toggleDrawer(false);
+    }
+
+    // 4. CONSOLA LIBRE SQL
+    function runFreeQuery() {
+      const sql = document.getElementById('free-sql-input').value.trim();
+      const msg = document.getElementById('free-msg');
+      const thead = document.getElementById('free-thead');
+      const tbody = document.getElementById('free-tbody');
+      const countBadge = document.getElementById('free-count');
+
+      msg.classList.add('hidden');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+
+      try {
+        const res = alasql(sql);
+        if (Array.isArray(res)) {
+          countBadge.innerText = `${res.length} filas`;
+          if (res.length > 0) {
+            const cols = Object.keys(res[0]);
+            const hTr = document.createElement('tr');
+            cols.forEach(c => {
+              const th = document.createElement('th');
+              th.className = 'p-2 md:p-3 text-slate-700 font-bold';
+              th.innerText = c;
+              hTr.appendChild(th);
+            });
+            thead.appendChild(hTr);
+
+            res.forEach(row => {
+              const tr = document.createElement('tr');
+              cols.forEach(c => {
+                const td = document.createElement('td');
+                td.className = 'p-2 md:p-3';
+                const val = row[c];
+                td.innerText = (val === null || val === undefined) ? 'NULL' : val;
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+          }
+        }
+      } catch (err) {
+        msg.classList.remove('hidden');
+        msg.className = 'p-3 md:p-4 rounded-xl text-xs md:text-sm font-semibold bg-red-100 text-red-900';
+        msg.innerText = `Error: ${err.message}`;
+      }
+    }
+
+    // Inicializar al Cargar Página
+    window.onload = function() {
+      initDatabase();
+      selectChallenge(1);
+      updateProgress();
+    };
+  </script>
 </body>
 </html>
