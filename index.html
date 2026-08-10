@@ -1,694 +1,456 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aprende SQL JOINs — Dr. Código</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
-  <style>
-    .glass-card {
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(10px);
-    }
-    .fade-in {
-      animation: fadeIn 0.2s ease-in-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    ::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #a5b4fc;
-      border-radius: 4px;
-    }
-    .drawer-transition {
-      transition: transform 0.3s ease-in-out;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Código - Simulador DaltonSoft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+    <style>
+        /* Estilos Quirúrgicos */
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .drawer { transition: transform 0.3s ease-in-out; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        
+        /* Conexiones visuales tipo Power BI */
+        .conexion-linea { border-left: 2px dashed #10b981; margin-left: 1rem; padding-left: 1rem; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+<body class="min-h-screen flex flex-col">
 
-  <div id="drawer-overlay" onclick="toggleDrawer(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
-
-  <aside id="drawer-menu" class="fixed top-0 left-0 bottom-0 w-72 md:w-80 bg-indigo-950 text-white z-50 drawer-transition -translate-x-full shadow-2xl flex flex-col justify-between">
-    <div>
-      <div class="p-4 bg-indigo-900 border-b border-indigo-800 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <span class="text-2xl">🩺</span>
-          <div>
-            <h2 class="font-bold text-sm md:text-base leading-tight text-white">Dr. Código</h2>
-            <p class="text-[10px] md:text-xs text-indigo-300">Menú de Aprendizaje</p>
-          </div>
-        </div>
-        <button onclick="toggleDrawer(false)" class="text-indigo-200 hover:text-white p-1.5 rounded-lg text-lg">✕</button>
-      </div>
-
-      <div class="p-4 border-b border-indigo-900/60 bg-indigo-900/30">
-        <div class="flex justify-between items-center text-xs mb-1.5">
-          <span class="text-indigo-200 font-medium">Progreso Global</span>
-          <span id="menu-progress-text" class="text-emerald-400 font-bold font-mono">0%</span>
-        </div>
-        <div class="w-full bg-indigo-950 rounded-full h-2 overflow-hidden border border-indigo-800">
-          <div id="menu-progress-bar" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <nav class="p-3 space-y-1 text-xs md:text-sm">
-        <button onclick="navTo('challenges')" id="menu-item-challenges" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 bg-indigo-800/80 text-white font-bold transition">
-          <span class="text-base md:text-lg">🎯</span>
-          <span>Casos Prácticos (Retos)</span>
-        </button>
-        <button onclick="navTo('lab')" id="menu-item-lab" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
-          <span class="text-base md:text-lg">💻</span>
-          <span>Consola SQL Libre</span>
-        </button>
-        <button onclick="navTo('tables')" id="menu-item-tables" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
-          <span class="text-base md:text-lg">🗄️</span>
-          <span>Ver Tablas de la BD</span>
-        </button>
-        <button onclick="navTo('modules')" id="menu-item-modules" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
-          <span class="text-base md:text-lg">📖</span>
-          <span>Lecciones Teóricas</span>
-        </button>
-      </nav>
-    </div>
-
-    <div class="p-4 border-t border-indigo-900 text-[11px] md:text-xs text-indigo-300 flex justify-between items-center">
-      <span>SQL JOINs v2.5 (Responsivo)</span>
-      <button onclick="resetAllProgress()" class="text-[10px] md:text-xs text-red-300 hover:text-red-100 underline">Reiniciar Progreso</button>
-    </div>
-  </aside>
-
-  <header class="bg-indigo-800 text-white p-3.5 md:p-4 sticky top-0 z-30 shadow-md">
-    <div class="flex justify-between items-center max-w-7xl mx-auto">
-      <div class="flex items-center space-x-3 md:space-x-4">
-        <button onclick="toggleDrawer(true)" class="p-1.5 md:p-2 rounded-lg bg-indigo-900/80 hover:bg-indigo-700 text-indigo-100 transition focus:outline-none">
-          <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-        <div>
-          <h1 id="header-section-title" class="font-bold text-sm md:text-lg leading-tight text-white">Casos Prácticos</h1>
-          <p class="text-[10px] md:text-xs text-indigo-200">Aprende SQL JOINs paso a paso</p>
-        </div>
-      </div>
-      
-      <span id="header-badge" class="bg-indigo-950 text-emerald-400 border border-indigo-700 text-[11px] md:text-xs px-3 py-1 rounded-full font-mono font-bold">
-        0% Completado
-      </span>
-    </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto p-3.5 md:p-6 space-y-4 md:space-y-6">
-
-    <section id="sec-challenges" class="sec-content fade-in space-y-4 md:space-y-6">
-
-      <div class="bg-white rounded-xl border border-indigo-200 shadow-sm p-3.5 md:p-5 space-y-3">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-          <span class="font-bold text-xs md:text-sm text-indigo-950 flex items-center gap-1.5">
-            <span>🗄️</span> Tablas de la Base de Datos (Estructura SQL Real)
-          </span>
-          <span class="text-[10px] md:text-xs text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded font-semibold border border-indigo-100">3 Tablas Conectadas</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          <div class="rounded-lg border border-blue-200 overflow-hidden shadow-xs flex flex-col justify-between">
-            <div class="bg-blue-50 px-2.5 py-1.5 border-b border-blue-200 flex justify-between items-center text-xs">
-              <span class="font-bold text-blue-900 flex items-center gap-1">
-                <span>🏙️</span> Tabla: Ciudades
-              </span>
-              <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_ciudad</span>
+    <header class="bg-slate-900 border-b border-slate-700 p-4 sticky top-0 z-40 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🩺</span>
+            <div>
+                <h1 class="font-bold text-lg text-emerald-400 leading-tight">Dr. Código ERP Simulator</h1>
+                <p class="text-[11px] text-slate-400">Entrenamiento con Base de Datos DaltonSoft</p>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs font-mono border-collapse">
-                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
-                  <tr class="divide-x divide-slate-200">
-                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_ciudad <span class="text-amber-600 font-bold">(PK)</span></th>
-                    <th class="p-1.5 md:p-2 font-bold">nombre_ciudad</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">1</td>
-                    <td class="p-1.5 md:p-2">Madrid</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">2</td>
-                    <td class="p-1.5 md:p-2">Bogotá</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">3</td>
-                    <td class="p-1.5 md:p-2">Lima</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-indigo-200 overflow-hidden shadow-xs flex flex-col justify-between">
-            <div class="bg-indigo-50 px-2.5 py-1.5 border-b border-indigo-200 flex justify-between items-center text-xs">
-              <span class="font-bold text-indigo-900 flex items-center gap-1">
-                <span>👥</span> Tabla: Clientes
-              </span>
-              <div class="flex gap-1 text-[10px]">
-                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id</span>
-                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_ciudad</span>
-              </div>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs font-mono border-collapse">
-                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
-                  <tr class="divide-x divide-slate-200">
-                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id <span class="text-amber-600 font-bold">(PK)</span></th>
-                    <th class="p-1.5 md:p-2 font-bold">nombre</th>
-                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_ciudad <span class="text-emerald-600 font-bold">(FK)</span></th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">101</td>
-                    <td class="p-1.5 md:p-2">Ana</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">102</td>
-                    <td class="p-1.5 md:p-2">Carlos</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">2</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">103</td>
-                    <td class="p-1.5 md:p-2">Elena</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">104</td>
-                    <td class="p-1.5 md:p-2">David</td>
-                    <td class="p-1.5 md:p-2 text-red-500 font-bold bg-red-50/50">NULL</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-emerald-200 overflow-hidden shadow-xs flex flex-col justify-between">
-            <div class="bg-emerald-50 px-2.5 py-1.5 border-b border-emerald-200 flex justify-between items-center text-xs">
-              <span class="font-bold text-emerald-900 flex items-center gap-1">
-                <span>🛍️</span> Tabla: Pedidos
-              </span>
-              <div class="flex gap-1 text-[10px]">
-                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_pedido</span>
-                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_cliente</span>
-              </div>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs font-mono border-collapse">
-                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
-                  <tr class="divide-x divide-slate-200">
-                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_pedido <span class="text-amber-600 font-bold">(PK)</span></th>
-                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_cliente <span class="text-emerald-600 font-bold">(FK)</span></th>
-                    <th class="p-1.5 md:p-2 font-bold">producto</th>
-                    <th class="p-1.5 md:p-2 font-bold">monto</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">501</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
-                    <td class="p-1.5 md:p-2">Laptop</td>
-                    <td class="p-1.5 md:p-2">$1200</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">502</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
-                    <td class="p-1.5 md:p-2">Mouse</td>
-                    <td class="p-1.5 md:p-2">$25</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">503</td>
-                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">102</td>
-                    <td class="p-1.5 md:p-2">Teclado</td>
-                    <td class="p-1.5 md:p-2">$80</td>
-                  </tr>
-                  <tr class="divide-x divide-slate-100">
-                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">504</td>
-                    <td class="p-1.5 md:p-2 text-red-600 font-bold bg-red-50/50">999</td>
-                    <td class="p-1.5 md:p-2">Monitor</td>
-                    <td class="p-1.5 md:p-2">$300</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
-      </div>
+        <div class="flex gap-2">
+            <button onclick="nav('teoria')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">1. Teoría</button>
+            <button onclick="nav('visor')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">2. Visor Relacional</button>
+            <button onclick="nav('ejercicios')" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-md">3. Ejercicios & Lógica</button>
+        </div>
+    </header>
 
-      <div class="flex space-x-2 overflow-x-auto pb-1 text-xs md:text-sm">
-        <button onclick="selectChallenge(1)" id="chal-tab-1" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-indigo-700 text-white border-indigo-700 shadow-sm transition">
-          Reto 1 (LEFT JOIN)
-        </button>
-        <button onclick="selectChallenge(2)" id="chal-tab-2" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
-          Reto 2 (INNER JOIN)
-        </button>
-        <button onclick="selectChallenge(3)" id="chal-tab-3" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
-          Reto 3 (Triple JOIN)
-        </button>
-        <button onclick="selectChallenge(4)" id="chal-tab-4" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
-          Reto 4 (GROUP BY + SUM)
-        </button>
-      </div>
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+        <section id="sec-teoria" class="sec-content hidden fade-in space-y-4">
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 border-b border-slate-700 pb-2 mb-4">📚 Fundamentos de JOINs</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                        <strong class="text-indigo-400 text-base block mb-2">INNER JOIN (La Coincidencia)</strong>
+                        <p>Busca parejas perfectas. Si un Cliente no tiene Pedidos, o un Pedido no tiene Cliente, se descartan de la lista. Solo muestra lo que existe en AMBAS tablas.</p>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                        <strong class="text-blue-400 text-base block mb-2">LEFT JOIN (La Prioridad Izquierda)</strong>
+                        <p>Conserva TODO lo de la tabla número 1 (la que pones en el FROM). Si la tabla 2 no tiene datos para empatar, no borra el registro, simplemente rellena con <code>NULL</code>.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-visor" class="sec-content hidden fade-in space-y-4">
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
+                <div class="mb-4 border-b border-slate-700 pb-3 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-xl font-bold text-emerald-400">🔍 Visor Dinámico de Relaciones (ERP DaltonSoft)</h2>
+                        <p class="text-xs text-slate-400 mt-1">Selecciona una tabla a la izquierda para ver cómo se conecta con el resto del sistema.</p>
+                    </div>
+                    <span class="text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-500 border border-slate-700">Modo Power BI</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-4 space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+                        <button onclick="verRelacion('DSCatCtes')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
+                            👥 DSCatCtes (Clientes)
+                        </button>
+                        <button onclick="verRelacion('DSVtaPedidos')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
+                            🛍️ DSVtaPedidos (Pedidos de Venta)
+                        </button>
+                        <button onclick="verRelacion('DSInvVehiculos')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
+                            🚗 DSInvVehiculos (Autos/Inventario)
+                        </button>
+                        <button onclick="verRelacion('DSFacDocOri')" class="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 hover:border-emerald-500 hover:bg-slate-800 transition text-sm font-bold text-slate-200 focus:bg-emerald-900 focus:border-emerald-400">
+                            📄 DSFacDocOri (Facturas/Servicio)
+                        </button>
+                    </div>
+
+                    <div class="md:col-span-8 bg-slate-900 border border-slate-700 rounded-xl p-6 min-h-[400px] flex items-center justify-center relative shadow-inner overflow-hidden" id="lienzo-visor">
+                        <p class="text-slate-500 text-sm">👈 Haz clic en una tabla para visualizar sus relaciones (PK y FK).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-ejercicios" class="sec-content fade-in space-y-4">
+            
+            <div class="flex space-x-2 overflow-x-auto pb-2 border-b border-slate-800">
+                <button onclick="cargarModulo('inner')" id="btn-mod-inner" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-emerald-700 text-white shadow">Módulo 1: INNER JOIN</button>
+                <button onclick="cargarModulo('left')" id="btn-mod-left" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700">Módulo 2: LEFT JOIN</button>
+                <button onclick="cargarModulo('multi')" id="btn-mod-multi" class="mod-btn px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-slate-400 hover:bg-slate-700">Módulo 3: JOINs Múltiples</button>
+            </div>
+
+            <div class="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+                <div>
+                    <h3 id="ej-titulo" class="font-bold text-emerald-400 text-lg">Cargando Módulo...</h3>
+                    <p id="ej-objetivo" class="text-xs text-slate-400 mt-1">...</p>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <button onclick="cambiarEjercicio(-1)" class="text-slate-400 hover:text-white">◀</button>
+                    <span id="ej-contador" class="text-xs font-bold font-mono">1 / 15</span>
+                    <button onclick="cambiarEjercicio(1)" class="text-slate-400 hover:text-white">▶</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-xl space-y-4 relative">
+                    <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">SUB-MÓDULO 1: LÓGICA</div>
+                    
+                    <h4 class="font-bold text-sm text-slate-200 border-b border-slate-700 pb-2 flex gap-2">
+                        <span>🧠</span> Desglose del Ejercicio
+                    </h4>
+
+                    <div class="space-y-3 text-xs" id="logica-contenedor">
+                        </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-slate-900 border border-slate-700 rounded-xl p-5 shadow-xl space-y-4 relative">
+                    <div class="absolute -top-3 left-4 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">SUB-MÓDULO 2: CONSOLA SQL</div>
+
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span class="text-sm font-bold text-slate-300">Editor de Código</span>
+                        <button onclick="resetearSQL()" class="text-[10px] text-slate-500 hover:text-emerald-400 underline">Borrar / Reiniciar</button>
+                    </div>
+
+                    <textarea id="sql-editor" rows="5" class="w-full bg-slate-950 text-emerald-400 font-mono text-sm p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none shadow-inner" spellcheck="false"></textarea>
+
+                    <button onclick="ejecutarReto()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition shadow-lg flex items-center justify-center gap-2">
+                        <span>▶</span> Ejecutar Consulta
+                    </button>
+
+                    <div class="mt-4 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden">
+                        <div class="bg-slate-800 px-3 py-1.5 border-b border-slate-700 flex justify-between items-center">
+                            <span class="text-[11px] font-bold text-slate-300">Resultado Obtenido</span>
+                            <span id="res-count" class="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-slate-400 font-mono">0 filas</span>
+                        </div>
+                        <div class="overflow-x-auto min-h-[150px] p-2" id="res-table-container">
+                            <p class="text-xs text-slate-600 italic text-center mt-10">Esperando ejecución...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="feedback-msj" class="hidden p-3 rounded-lg text-xs font-bold mt-2"></div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ---------------------------------------------------------
+        // 1. MOTOR DE BASE DE DATOS (Creación de las 11 tablas ERP)
+        // ---------------------------------------------------------
+        function inicializarERP() {
+            try {
+                // Clientes y Ubicaciones
+                alasql('CREATE TABLE DSCatEdos (Cod_Edo INT, Nombre_Edo STRING)');
+                alasql("INSERT INTO DSCatEdos VALUES (1, 'Jalisco'), (2, 'CDMX')");
+
+                alasql('CREATE TABLE DSCatCiud (Cod_Ciu INT, Cod_Edo INT, Nombre_Ciu STRING)');
+                alasql("INSERT INTO DSCatCiud VALUES (10, 1, 'Guadalajara'), (20, 2, 'Coyoacán')");
+
+                alasql('CREATE TABLE DSCatCtes (Cod_Cte INT, Cod_Ciu INT, Cod_Edo INT, Nombre STRING)');
+                alasql("INSERT INTO DSCatCtes VALUES (1001, 10, 1, 'Empresa Automotriz SA'), (1002, 20, 2, 'Juan Perez'), (1003, 10, 1, 'Cliente Sin Compras')");
+
+                // Pedidos y Vendedores
+                alasql('CREATE TABLE DSCatVend (Cod_Vend INT, Nombre_Vend STRING)');
+                alasql("INSERT INTO DSCatVend VALUES (50, 'Vendedor Estrella'), (51, 'Vendedor Nuevo')");
+
+                alasql('CREATE TABLE DSVtaPedidos (Tipo_Ped STRING, Num_Ped INT, Cod_Cte INT, Cod_Vend INT)');
+                alasql("INSERT INTO DSVtaPedidos VALUES ('PN', 5001, 1001, 50), ('PS', 5002, 1002, 51)");
+
+                // Vehículos, Modelos y Colores
+                alasql('CREATE TABLE DSCatColor (Cod_Col INT, Nombre_Col STRING)');
+                alasql("INSERT INTO DSCatColor VALUES (1, 'Rojo'), (2, 'Plata')");
+
+                alasql('CREATE TABLE DSCatModXTpAut (Cod_Mod INT, Descripcion STRING)');
+                alasql("INSERT INTO DSCatModXTpAut VALUES (99, 'Civic'), (88, 'CR-V')");
+
+                alasql('CREATE TABLE DSInvVehiculos (NumSer_Veh STRING, Cod_Mod INT, Cod_Col INT)');
+                alasql("INSERT INTO DSInvVehiculos VALUES ('VIN001', 99, 2), ('VIN002', 88, 1)");
+
+                // Servicio y Facturación
+                alasql('CREATE TABLE DSFacDocOri (TpDoc_DOri STRING, FolDoc_DOri INT, Cod_Cte INT, NumSer_Vehi STRING)');
+                alasql("INSERT INTO DSFacDocOri VALUES ('FAC', 100, 1001, 'VIN001')");
+
+                console.log("Base de datos DaltonSoft cargada al 100%");
+            } catch (err) {
+                console.error("Error BD:", err);
+            }
+        }
+
+        // ---------------------------------------------------------
+        // 2. NAVEGACIÓN Y VISOR RELACIONAL (POWER BI)
+        // ---------------------------------------------------------
+        function nav(pantalla) {
+            document.querySelectorAll('.sec-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`sec-${pantalla}`).classList.remove('hidden');
+
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
+                b.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            event.currentTarget.classList.remove('bg-slate-800', 'text-slate-300');
+            event.currentTarget.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
+        }
+
+        // Diccionario visual de relaciones
+        const relaciones = {
+            DSCatCtes: {
+                titulo: "👥 DSCatCtes (Catálogo de Clientes)",
+                pk: "Cod_Cte",
+                conexiones: [
+                    { tabla: "DSCatCiud", fk: "Cod_Ciu", desc: "Se conecta para saber su Ciudad" },
+                    { tabla: "DSCatEdos", fk: "Cod_Edo", desc: "Se conecta para saber su Estado" }
+                ]
+            },
+            DSVtaPedidos: {
+                titulo: "🛍️ DSVtaPedidos (Pedidos de Venta)",
+                pk: "Tipo_Ped + Num_Ped",
+                conexiones: [
+                    { tabla: "DSCatCtes", fk: "Cod_Cte", desc: "Identifica QUÉ cliente compró" },
+                    { tabla: "DSCatVend", fk: "Cod_Vend", desc: "Identifica QUÉ vendedor cerró la venta" }
+                ]
+            },
+            DSInvVehiculos: {
+                titulo: "🚗 DSInvVehiculos (Inventario Físico)",
+                pk: "NumSer_Veh (VIN)",
+                conexiones: [
+                    { tabla: "DSCatModXTpAut", fk: "Cod_Mod", desc: "Se conecta para obtener el Modelo (ej. Civic)" },
+                    { tabla: "DSCatColor", fk: "Cod_Col", desc: "Se conecta para obtener el Nombre del Color" }
+                ]
+            },
+            DSFacDocOri: {
+                titulo: "📄 DSFacDocOri (Facturas/Servicio)",
+                pk: "TpDoc_DOri + FolDoc_DOri",
+                conexiones: [
+                    { tabla: "DSCatCtes", fk: "Cod_Cte", desc: "A nombre de quién está la factura" },
+                    { tabla: "DSInvVehiculos", fk: "NumSer_Vehi", desc: "A qué auto se le dio el servicio" }
+                ]
+            }
+        };
+
+        function verRelacion(tabla) {
+            const data = relaciones[tabla];
+            const lienzo = document.getElementById('lienzo-visor');
+            
+            let html = `
+                <div class="flex flex-col items-center w-full animate-fadeIn">
+                    <div class="bg-indigo-900 border-2 border-indigo-500 rounded-xl p-4 w-3/4 mb-6 shadow-[0_0_15px_rgba(99,102,241,0.5)] z-10 relative text-center">
+                        <h3 class="font-bold text-white text-lg">${data.titulo}</h3>
+                        <span class="inline-block mt-2 bg-amber-500/20 text-amber-300 text-xs font-mono px-2 py-1 rounded border border-amber-500/50">
+                            🔑 Primary Key: ${data.pk}
+                        </span>
+                    </div>
+            `;
+
+            data.conexiones.forEach(con => {
+                html += `
+                    <div class="flex w-full items-start mb-4">
+                        <div class="w-1/4 flex flex-col items-center justify-start mt-2">
+                            <div class="h-8 border-l-2 border-dashed border-emerald-500 mb-1"></div>
+                            <span class="text-[10px] text-emerald-400 bg-slate-900 px-1 font-mono border border-emerald-900 rounded">🔗 ON ${data.pk.split(' ')[0]} = ${con.fk}</span>
+                            <div class="text-emerald-500">▼</div>
+                        </div>
+                        <div class="w-3/4 bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-md relative">
+                            <span class="absolute -left-2 top-3 w-4 h-4 bg-slate-900 border border-slate-600 transform rotate-45"></span>
+                            <h4 class="font-bold text-emerald-400 text-sm">${con.tabla}</h4>
+                            <p class="text-xs text-slate-400 mt-1">${con.desc}</p>
+                            <span class="inline-block mt-1 bg-emerald-900/30 text-emerald-300 text-[10px] font-mono px-1 py-0.5 rounded">
+                                FK (Llave Foránea): ${con.fk}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            lienzo.innerHTML = html;
+        }
+
+        // ---------------------------------------------------------
+        // 3. SISTEMA DE EJERCICIOS Y LÓGICA (15 por Módulo soportados)
+        // ---------------------------------------------------------
         
-        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 space-y-3">
-          <div class="flex justify-between items-center">
-            <span id="chal-badge" class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
-              Misión 1
-            </span>
-            <span id="chal-status" class="text-[10px] md:text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded">
-              ⏳ Pendiente
-            </span>
-          </div>
+        // Base de datos de ejercicios (Estructura diseñada para soportar hasta 15 por array)
+        const dbEjercicios = {
+            inner: [
+                {
+                    titulo: "Ejercicio 1: Ventas y Vendedores",
+                    objetivo: "Obtener la lista de pedidos de venta y mostrar EL NOMBRE del vendedor que lo realizó.",
+                    sql: "SELECT p.Num_Ped, v.Nombre_Vend\nFROM DSVtaPedidos AS p\nINNER JOIN DSCatVend AS v \n  ON p.Cod_Vend = v.Cod_Vend;",
+                    logica: [
+                        { p: "1. El Caso", desc: "Queremos ver pedidos cruzados con el catálogo de vendedores para no ver solo el código, sino el nombre." },
+                        { p: "2. Tabla Principal", desc: "Iniciamos con los Pedidos: <code>DSVtaPedidos</code>." },
+                        { p: "3. Alias y Orden", desc: "Le damos el apodo <b>p</b> a los Pedidos, y <b>v</b> a los Vendedores (<code>DSCatVend AS v</code>)." },
+                        { p: "4. Tipo de JOIN", desc: "<span class='text-emerald-400 font-bold'>INNER JOIN</span> porque queremos parejas perfectas: Pedidos que sí tengan un vendedor asignado válido." },
+                        { p: "5. Conexión (ON)", desc: "El puente es el código del vendedor: <code>ON p.Cod_Vend = v.Cod_Vend</code>." }
+                    ]
+                }
+                // Aquí se agregarían los ejercicios 2 al 15...
+            ],
+            left: [
+                {
+                    titulo: "Ejercicio 1: Clientes Totales y sus Compras",
+                    objetivo: "Extraer TODOS los clientes registrados en DaltonSoft, y si tienen un pedido, mostrarlo. Si no han comprado, no borrarlos de la lista.",
+                    sql: "SELECT c.Nombre, p.Num_Ped\nFROM DSCatCtes AS c\nLEFT JOIN DSVtaPedidos AS p \n  ON c.Cod_Cte = p.Cod_Cte;",
+                    logica: [
+                        { p: "1. El Caso", desc: "El departamento de CRM necesita ver a TODOS los clientes, incluyendo a 'Cliente Sin Compras'." },
+                        { p: "2. Tabla Principal", desc: "Nuestra base obligatoria (izquierda) es <code>DSCatCtes</code>." },
+                        { p: "3. Alias y Orden", desc: "<b>c</b> para Clientes, <b>p</b> para Pedidos." },
+                        { p: "4. Tipo de JOIN", desc: "<span class='text-blue-400 font-bold'>LEFT JOIN</span>. Esto protege la tabla izquierda (Clientes) para que no desaparezcan si no hay coincidencia a la derecha." },
+                        { p: "5. Conexión (ON)", desc: "Ambas tablas comparten el código de cliente: <code>ON c.Cod_Cte = p.Cod_Cte</code>." }
+                    ]
+                }
+            ],
+            multi: [
+                {
+                    titulo: "Ejercicio 1: Reporte Triple (Cliente + Ciudad + Estado)",
+                    objetivo: "Mostrar el Nombre del Cliente, el Nombre de su Ciudad y el Nombre de su Estado.",
+                    sql: "SELECT c.Nombre, ciu.Nombre_Ciu, e.Nombre_Edo\nFROM DSCatCtes AS c\nINNER JOIN DSCatCiud AS ciu ON c.Cod_Ciu = ciu.Cod_Ciu\nINNER JOIN DSCatEdos AS e ON c.Cod_Edo = e.Cod_Edo;",
+                    logica: [
+                        { p: "1. El Caso", desc: "Unir 3 tablas para armar la dirección completa en texto legible, no en códigos numéricos." },
+                        { p: "2. Tabla Principal", desc: "El centro de información es el Cliente: <code>DSCatCtes AS c</code>." },
+                        { p: "3. Alias Múltiples", desc: "<b>c</b>=Clientes, <b>ciu</b>=Ciudades, <b>e</b>=Estados." },
+                        { p: "4. Estructura", desc: "Se necesitan 2 JOINs consecutivos encadenados a la tabla Clientes." },
+                        { p: "5. Conexión Múltiple", desc: "1er Enlace: <code>c.Cod_Ciu = ciu.Cod_Ciu</code><br>2do Enlace: <code>c.Cod_Edo = e.Cod_Edo</code>." }
+                    ]
+                }
+            ]
+        };
 
-          <h3 id="chal-title" class="font-bold text-sm md:text-base text-slate-900">Cargando caso...</h3>
-          <p id="chal-desc" class="text-xs md:text-sm text-slate-600 leading-relaxed">...</p>
-        </div>
+        let moduloActivo = 'inner';
+        let indiceActivo = 0;
 
-        <div class="lg:col-span-7 bg-slate-950 p-4 md:p-5 rounded-xl shadow-lg border border-slate-800 space-y-3">
-          <div class="flex justify-between items-center text-xs md:text-sm">
-            <span class="font-bold text-indigo-300 flex items-center gap-1.5">
-              <span>✏️</span> Escribe tu Consulta SQL:
-            </span>
-            <button onclick="resetEditorQuery()" class="text-[11px] md:text-xs text-slate-400 hover:text-slate-200 underline">Restaurar Ejemplo</button>
-          </div>
+        function cargarModulo(modulo) {
+            moduloActivo = modulo;
+            indiceActivo = 0;
 
-          <textarea id="sql-editor" rows="4" class="w-full bg-slate-900 text-emerald-400 font-mono text-xs md:text-sm p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed" placeholder="Escribe SELECT..."></textarea>
-
-          <div class="flex flex-wrap gap-1.5 text-[10px] md:text-xs font-mono">
-            <button onclick="insertSql('SELECT ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">SELECT</button>
-            <button onclick="insertSql('Clientes AS c ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Clientes c</button>
-            <button onclick="insertSql('Pedidos AS p ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Pedidos p</button>
-            <button onclick="insertSql('LEFT JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">LEFT JOIN</button>
-            <button onclick="insertSql('INNER JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">INNER JOIN</button>
-            <button onclick="insertSql('ON c.id = p.id_cliente ')" class="bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1 rounded hover:bg-emerald-900">ON c.id = p.id_cliente</button>
-          </div>
-
-          <button onclick="validateCurrentChallenge()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow-md transition">
-            <span>🚀</span>
-            <span>Validar Consulta y Ver Resultado</span>
-          </button>
-        </div>
-
-      </div>
-
-      <div id="result-feedback" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold leading-relaxed"></div>
-
-      <div id="result-table-box" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs md:text-sm text-slate-700 flex justify-between items-center">
-          <span>📊 Resultado Obtenido</span>
-          <span id="result-rows-count" class="bg-indigo-100 text-indigo-800 text-[11px] md:text-xs px-2.5 py-0.5 rounded-full font-mono">0 filas</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs md:text-sm font-mono">
-            <thead id="result-thead" class="bg-slate-100 text-slate-600 border-b text-[10px] md:text-xs"></thead>
-            <tbody id="result-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </section>
-
-    <section id="sec-lab" class="sec-content hidden fade-in space-y-4">
-      <div class="bg-slate-900 text-white rounded-xl p-4 shadow-md space-y-1">
-        <h2 class="font-bold text-sm md:text-base text-emerald-400">💻 Consola SQL Libre</h2>
-        <p class="text-xs md:text-sm text-slate-300">
-          Escribe y ejecuta cualquier consulta SQL sobre las tablas reales en memoria.
-        </p>
-      </div>
-
-      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-        <textarea id="free-sql-input" rows="5" class="w-full bg-transparent text-emerald-400 font-mono text-xs md:text-sm focus:outline-none resize-none leading-relaxed" placeholder="SELECT * FROM Clientes;"></textarea>
-
-        <button onclick="runFreeQuery()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow">
-          <span>▶️</span>
-          <span>Ejecutar SQL</span>
-        </button>
-      </div>
-
-      <div id="free-msg" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold"></div>
-
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="bg-slate-50 p-3 border-b text-xs md:text-sm font-bold text-slate-700 flex justify-between">
-          <span>Resultado Consola</span>
-          <span id="free-count" class="text-[11px] md:text-xs bg-slate-200 px-2.5 py-0.5 rounded font-mono">0 filas</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs md:text-sm font-mono">
-            <thead id="free-thead" class="bg-slate-100 border-b"></thead>
-            <tbody id="free-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="sec-tables" class="sec-content hidden fade-in space-y-4">
-      <div class="bg-indigo-900 text-white p-4 rounded-xl text-xs md:text-sm">
-        <h2 class="font-bold text-sm md:text-base text-emerald-300">🗄️ Detalle de Tablas en Memoria</h2>
-        <p class="text-xs text-indigo-200 mt-1">
-          Estructura y relaciones del esquema de base de datos.
-        </p>
-      </div>
-
-      <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 space-y-4 text-xs md:text-sm">
-        <div>
-          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">1. Ciudades (Tabla Principal)</h4>
-          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id_ciudad</code> (PK - Primary Key), <code>nombre_ciudad</code></p>
-        </div>
-        <div>
-          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">2. Clientes (Tabla Intermedia)</h4>
-          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id</code> (PK - Primary Key), <code>nombre</code>, <code>id_ciudad</code> (FK - Foreign Key hacia Ciudades)</p>
-        </div>
-        <div>
-          <h4 class="font-bold text-indigo-900 border-b pb-1 text-sm md:text-base">3. Pedidos (Tabla de Transacciones)</h4>
-          <p class="text-xs md:text-sm text-slate-600 mt-1">Campos: <code>id_pedido</code> (PK - Primary Key), <code>id_cliente</code> (FK - Foreign Key hacia Clientes), <code>producto</code>, <code>monto</code></p>
-        </div>
-      </div>
-    </section>
-
-    <section id="sec-modules" class="sec-content hidden fade-in space-y-4">
-      <div class="bg-white rounded-xl border border-slate-200 p-4 md:p-6 space-y-4 text-xs md:text-sm">
-        <h3 class="font-bold text-sm md:text-base text-indigo-900">📚 Teoría de JOINs desde Cero</h3>
-        
-        <div class="space-y-3 text-slate-700">
-          <div class="p-3 bg-indigo-50/60 rounded-lg border border-indigo-100">
-            <strong class="text-indigo-900 block font-bold mb-1 text-xs md:text-sm">INNER JOIN (Coincidencia Exacta)</strong>
-            Devuelve únicamente las filas que tienen una coincidencia exacta de valores en ambas tablas (vía la llave PK = FK).
-          </div>
-          <div class="p-3 bg-blue-50/60 rounded-lg border border-blue-100">
-            <strong class="text-blue-900 block font-bold mb-1 text-xs md:text-sm">LEFT JOIN (Preserva la Tabla Izquierda)</strong>
-            Conserva absolutamente todas las filas de la tabla principal (izquierda). Si alguna fila no tiene pareja en la derecha, la rellena con <code>NULL</code>.
-          </div>
-          <div class="p-3 bg-purple-50/60 rounded-lg border border-purple-100">
-            <strong class="text-purple-900 block font-bold mb-1 text-xs md:text-sm">GROUP BY & SUM (Agrupaciones)</strong>
-            Agrupa las filas resultantes por un campo en común (por ejemplo, el nombre del cliente) para aplicar funciones matemáticas como la suma total (<code>SUM</code>) o el conteo (<code>COUNT</code>).
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <script>
-    // 1. BASE DE DATOS EN NAVEGADOR (AlaSQL)
-    function initDatabase() {
-      try {
-        alasql('CREATE TABLE IF NOT EXISTS Ciudades (id_ciudad INT, nombre_ciudad STRING)');
-        alasql('DELETE FROM Ciudades');
-        alasql("INSERT INTO Ciudades VALUES (1, 'Madrid'), (2, 'Bogotá'), (3, 'Lima')");
-
-        alasql('CREATE TABLE IF NOT EXISTS Clientes (id INT, nombre STRING, id_ciudad INT)');
-        alasql('DELETE FROM Clientes');
-        alasql("INSERT INTO Clientes VALUES (101, 'Ana', 1), (102, 'Carlos', 2), (103, 'Elena', 1), (104, 'David', NULL)");
-
-        alasql('CREATE TABLE IF NOT EXISTS Pedidos (id_pedido INT, id_cliente INT, producto STRING, monto INT)');
-        alasql('DELETE FROM Pedidos');
-        alasql("INSERT INTO Pedidos VALUES (501, 101, 'Laptop', 1200), (502, 101, 'Mouse', 25), (503, 102, 'Teclado', 80), (504, 999, 'Monitor', 300)");
-      } catch (e) {
-        console.error("Error BD:", e);
-      }
-    }
-
-    // 2. MENÚ LATERAL (DRAWER)
-    function toggleDrawer(open) {
-      const drawer = document.getElementById('drawer-menu');
-      const overlay = document.getElementById('drawer-overlay');
-      if (open) {
-        drawer.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-      } else {
-        drawer.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-      }
-    }
-
-    function navTo(sectionId) {
-      toggleDrawer(false);
-      document.querySelectorAll('.sec-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
-
-      const titles = {
-        challenges: 'Casos Prácticos',
-        lab: 'Consola SQL Libre',
-        tables: 'Tablas de la BD',
-        modules: 'Lecciones Teóricas'
-      };
-      document.getElementById('header-section-title').innerText = titles[sectionId] || 'Dr. Código';
-
-      ['challenges', 'lab', 'tables', 'modules'].forEach(id => {
-        const item = document.getElementById(`menu-item-${id}`);
-        if (id === sectionId) {
-          item.className = 'w-full text-left p-3 rounded-xl flex items-center space-x-3 bg-indigo-800/80 text-white font-bold transition';
-        } else {
-          item.className = 'w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition';
-        }
-      });
-    }
-
-    // 3. RETOS Y CASOS PRÁCTICOS
-    const challengeList = {
-      1: {
-        badge: "Misión 1 — Básico",
-        title: "Caso 1: Lista de Todos los Clientes y sus Compras",
-        desc: "Marketing necesita ver la lista de <strong>TODOS los clientes</strong>, tengan o no pedidos registrados. Si un cliente no compró nada (como David o Elena), debe figurar con <code class='text-red-600 font-bold'>NULL</code>.",
-        defaultSql: "SELECT c.nombre, p.producto\nFROM Clientes AS c\nLEFT JOIN Pedidos AS p ON c.id = p.id_cliente;",
-        expectedRows: 5,
-        requiredKeyword: "LEFT JOIN",
-        hint: "Utiliza LEFT JOIN para mantener a los clientes de la izquierda sin pedidos."
-      },
-      2: {
-        badge: "Misión 2 — Filtro",
-        title: "Caso 2: Clientes con Compras Efectivas",
-        desc: "Contabilidad requiere solo la lista de clientes que <strong>SÍ han realizado al menos una compra</strong>. Excluye por completo a los clientes sin pedidos.",
-        defaultSql: "SELECT c.nombre, p.producto\nFROM Clientes AS c\nINNER JOIN Pedidos AS p ON c.id = p.id_cliente;",
-        expectedRows: 3,
-        requiredKeyword: "INNER JOIN",
-        hint: "Usa INNER JOIN para descartar los registros sin coincidencia."
-      },
-      3: {
-        badge: "Misión 3 — Avanzado",
-        title: "Caso 3: Reporte de 3 Tablas (Cliente + Ciudad + Pedido)",
-        desc: "Genera una consulta que muestre el <strong>nombre del cliente</strong>, el <strong>nombre de su ciudad</strong> y el <strong>producto</strong> que compró.",
-        defaultSql: "SELECT c.nombre, ciu.nombre_ciudad, p.producto\nFROM Clientes AS c\nJOIN Ciudades AS ciu ON c.id_ciudad = ciu.id_ciudad\nJOIN Pedidos AS p ON c.id = p.id_cliente;",
-        expectedRows: 3,
-        requiredKeyword: "Ciudades",
-        hint: "Encadena dos cláusulas JOIN consecutivas."
-      },
-      4: {
-        badge: "Misión 4 — Agregación",
-        title: "Caso 4: Total Dinámico Gastado por Cliente",
-        desc: "Calcula la <strong>suma del monto total (SUM)</strong> de las compras de cada cliente. Agrupa la información por nombre de cliente.",
-        defaultSql: "SELECT c.nombre, SUM(p.monto) AS total_gastado\nFROM Clientes AS c\nJOIN Pedidos AS p ON c.id = p.id_cliente\nGROUP BY c.nombre;",
-        expectedRows: 2,
-        requiredKeyword: "GROUP BY",
-        hint: "Combina SUM(p.monto) con GROUP BY c.nombre."
-      }
-    };
-
-    let activeChalId = 1;
-
-    function selectChallenge(id) {
-      activeChalId = id;
-      const c = challengeList[id];
-
-      document.getElementById('chal-badge').innerText = c.badge;
-      document.getElementById('chal-title').innerText = c.title;
-      document.getElementById('chal-desc').innerHTML = c.desc;
-      document.getElementById('sql-editor').value = c.defaultSql;
-
-      document.getElementById('result-feedback').classList.add('hidden');
-      document.getElementById('result-table-box').classList.add('hidden');
-
-      for (let i = 1; i <= 4; i++) {
-        const btn = document.getElementById(`chal-tab-${i}`);
-        if (i === id) {
-          btn.className = 'chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-indigo-700 text-white border-indigo-700 shadow-sm transition';
-        } else {
-          btn.className = 'chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition';
-        }
-      }
-
-      updateStatusBadge();
-    }
-
-    function resetEditorQuery() {
-      document.getElementById('sql-editor').value = challengeList[activeChalId].defaultSql;
-    }
-
-    function insertSql(text) {
-      const area = document.getElementById('sql-editor');
-      const start = area.selectionStart;
-      const end = area.selectionEnd;
-      area.value = area.value.substring(0, start) + text + area.value.substring(end);
-      area.focus();
-      area.selectionStart = area.selectionEnd = start + text.length;
-    }
-
-    function validateCurrentChallenge() {
-      const chal = challengeList[activeChalId];
-      const sql = document.getElementById('sql-editor').value.trim();
-      const feedback = document.getElementById('result-feedback');
-      const tableBox = document.getElementById('result-table-box');
-      const thead = document.getElementById('result-thead');
-      const tbody = document.getElementById('result-tbody');
-      const rowsCountBadge = document.getElementById('result-rows-count');
-
-      feedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-red-100', 'text-red-900');
-      thead.innerHTML = '';
-      tbody.innerHTML = '';
-
-      try {
-        const res = alasql(sql);
-
-        if (Array.isArray(res) && res.length > 0) {
-          tableBox.classList.remove('hidden');
-          rowsCountBadge.innerText = `${res.length} filas`;
-
-          const cols = Object.keys(res[0]);
-          const hTr = document.createElement('tr');
-          cols.forEach(col => {
-            const th = document.createElement('th');
-            th.className = 'p-2 md:p-3 text-slate-700 font-bold';
-            th.innerText = col;
-            hTr.appendChild(th);
-          });
-          thead.appendChild(hTr);
-
-          res.forEach(row => {
-            const tr = document.createElement('tr');
-            cols.forEach(col => {
-              const td = document.createElement('td');
-              td.className = 'p-2 md:p-3';
-              const val = row[col];
-              if (val === null || val === undefined) {
-                td.innerHTML = `<span class="bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded text-[10px] md:text-xs">NULL</span>`;
-              } else {
-                td.innerText = val;
-              }
-              tr.appendChild(td);
+            // UI Botones
+            document.querySelectorAll('.mod-btn').forEach(b => {
+                b.classList.remove('bg-emerald-700', 'text-white');
+                b.classList.add('bg-slate-800', 'text-slate-400');
             });
-            tbody.appendChild(tr);
-          });
+            document.getElementById(`btn-mod-${modulo}`).classList.remove('bg-slate-800', 'text-slate-400');
+            document.getElementById(`btn-mod-${modulo}`).classList.add('bg-emerald-700', 'text-white');
+
+            renderizarEjercicio();
         }
 
-        const upperSql = sql.toUpperCase();
-        if (res.length === chal.expectedRows && upperSql.includes(chal.requiredKeyword.toUpperCase())) {
-          feedback.classList.add('bg-emerald-100', 'text-emerald-900');
-          feedback.innerHTML = `🎉 <strong>¡Caso Resuelto con Éxito!</strong> Tu consulta obtuvo las ${res.length} filas esperadas correctamente.`;
-
-          localStorage.setItem(`sql_done_chal_${activeChalId}`, 'true');
-          updateProgress();
-        } else {
-          feedback.classList.add('bg-red-100', 'text-red-900');
-          feedback.innerHTML = `⚠️ <strong>Respuesta Incompleta:</strong> Tu consulta devolvió ${res.length} filas. <br>💡 <em>Pista: ${chal.hint}</em>`;
+        function cambiarEjercicio(direccion) {
+            const max = dbEjercicios[moduloActivo].length;
+            indiceActivo += direccion;
+            if (indiceActivo < 0) indiceActivo = max - 1;
+            if (indiceActivo >= max) indiceActivo = 0;
+            renderizarEjercicio();
         }
 
-      } catch (err) {
-        feedback.classList.add('bg-red-100', 'text-red-900');
-        feedback.innerHTML = `❌ <strong>Error de Sintaxis SQL:</strong> ${err.message}`;
-      }
-    }
+        function renderizarEjercicio() {
+            const data = dbEjercicios[moduloActivo][indiceActivo];
+            const max = dbEjercicios[moduloActivo].length;
 
-    function updateStatusBadge() {
-      const isDone = localStorage.getItem(`sql_done_chal_${activeChalId}`) === 'true';
-      const badge = document.getElementById('chal-status');
-      if (isDone) {
-        badge.innerText = '✅ Resuelto';
-        badge.className = 'text-[10px] md:text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded';
-      } else {
-        badge.innerText = '⏳ Pendiente';
-        badge.className = 'text-[10px] md:text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded';
-      }
-    }
+            document.getElementById('ej-titulo').innerText = data.titulo;
+            document.getElementById('ej-objetivo').innerText = data.objetivo;
+            document.getElementById('ej-contador').innerText = `${indiceActivo + 1} / ${max === 1 ? '15 (Demo)' : max}`;
 
-    function updateProgress() {
-      let completed = 0;
-      for (let i = 1; i <= 4; i++) {
-        if (localStorage.getItem(`sql_done_chal_${i}`) === 'true') completed++;
-      }
-      const percent = Math.round((completed / 4) * 100);
-
-      document.getElementById('header-badge').innerText = `${percent}% Completado`;
-      document.getElementById('menu-progress-text').innerText = `${percent}%`;
-      document.getElementById('menu-progress-bar').style.width = `${percent}%`;
-
-      updateStatusBadge();
-    }
-
-    function resetAllProgress() {
-      for (let i = 1; i <= 4; i++) {
-        localStorage.removeItem(`sql_done_chal_${i}`);
-      }
-      updateProgress();
-      toggleDrawer(false);
-    }
-
-    // 4. CONSOLA LIBRE SQL
-    function runFreeQuery() {
-      const sql = document.getElementById('free-sql-input').value.trim();
-      const msg = document.getElementById('free-msg');
-      const thead = document.getElementById('free-thead');
-      const tbody = document.getElementById('free-tbody');
-      const countBadge = document.getElementById('free-count');
-
-      msg.classList.add('hidden');
-      thead.innerHTML = '';
-      tbody.innerHTML = '';
-
-      try {
-        const res = alasql(sql);
-        if (Array.isArray(res)) {
-          countBadge.innerText = `${res.length} filas`;
-          if (res.length > 0) {
-            const cols = Object.keys(res[0]);
-            const hTr = document.createElement('tr');
-            cols.forEach(c => {
-              const th = document.createElement('th');
-              th.className = 'p-2 md:p-3 text-slate-700 font-bold';
-              th.innerText = c;
-              hTr.appendChild(th);
+            // Renderizar Sub-Módulo Lógico
+            const panelLogica = document.getElementById('logica-contenedor');
+            panelLogica.innerHTML = '';
+            data.logica.forEach(item => {
+                panelLogica.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 rounded p-2.5 shadow-sm">
+                        <strong class="text-indigo-400 block mb-0.5">${item.p}</strong>
+                        <p class="text-slate-300 leading-snug">${item.desc}</p>
+                    </div>
+                `;
             });
-            thead.appendChild(hTr);
 
-            res.forEach(row => {
-              const tr = document.createElement('tr');
-              cols.forEach(c => {
-                const td = document.createElement('td');
-                td.className = 'p-2 md:p-3';
-                const val = row[c];
-                td.innerText = (val === null || val === undefined) ? 'NULL' : val;
-                tr.appendChild(td);
-              });
-              tbody.appendChild(tr);
-            });
-          }
+            // Llenar SQL Editor
+            document.getElementById('sql-editor').value = data.sql;
+            
+            // Limpiar tabla de resultados
+            document.getElementById('res-table-container').innerHTML = '<p class="text-xs text-slate-600 italic text-center mt-10">Esperando ejecución...</p>';
+            document.getElementById('res-count').innerText = "0 filas";
+            document.getElementById('feedback-msj').classList.add('hidden');
         }
-      } catch (err) {
-        msg.classList.remove('hidden');
-        msg.className = 'p-3 md:p-4 rounded-xl text-xs md:text-sm font-semibold bg-red-100 text-red-900';
-        msg.innerText = `Error: ${err.message}`;
-      }
-    }
 
-    // Inicializar al Cargar Página
-    window.onload = function() {
-      initDatabase();
-      selectChallenge(1);
-      updateProgress();
-    };
-  </script>
+        function resetearSQL() {
+            document.getElementById('sql-editor').value = dbEjercicios[moduloActivo][indiceActivo].sql;
+        }
+
+        function ejecutarReto() {
+            const query = document.getElementById('sql-editor').value.trim();
+            const contenedor = document.getElementById('res-table-container');
+            const feedback = document.getElementById('feedback-msj');
+            const countLabel = document.getElementById('res-count');
+
+            feedback.classList.remove('hidden', 'bg-emerald-900', 'text-emerald-300', 'bg-red-900', 'text-red-300');
+
+            try {
+                const res = alasql(query);
+                
+                if (res.length === 0) {
+                    contenedor.innerHTML = '<p class="text-amber-400 text-center mt-10 text-xs">Consulta ejecutada, pero arrojó 0 resultados.</p>';
+                    countLabel.innerText = "0 filas";
+                    return;
+                }
+
+                countLabel.innerText = `${res.length} filas`;
+
+                const cols = Object.keys(res[0]);
+                let html = '<table class="w-full text-left font-mono text-[11px] whitespace-nowrap"><thead class="bg-slate-900 text-emerald-400 border-b border-slate-700"><tr>';
+                cols.forEach(c => html += `<th class="p-2">${c}</th>`);
+                html += '</tr></thead><tbody class="divide-y divide-slate-800">';
+
+                res.forEach(row => {
+                    html += '<tr class="hover:bg-slate-800 transition">';
+                    cols.forEach(c => {
+                        const val = row[c];
+                        if (val === null || val === undefined) {
+                            html += `<td class="p-2"><span class="bg-red-900/50 text-red-400 font-bold px-1 rounded">NULL</span></td>`;
+                        } else {
+                            html += `<td class="p-2 text-slate-300">${val}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+
+                contenedor.innerHTML = html;
+                feedback.classList.add('bg-emerald-900', 'text-emerald-300');
+                feedback.innerHTML = `✅ ¡Consulta ejecutada sin errores de sintaxis! Revisa la tabla de resultados.`;
+
+            } catch (error) {
+                contenedor.innerHTML = '';
+                countLabel.innerText = "Error";
+                feedback.classList.add('bg-red-900', 'text-red-300');
+                feedback.innerHTML = `❌ <b>ERROR SQL:</b> ${error.message}`;
+            }
+        }
+
+        // Init
+        window.onload = () => {
+            inicializarERP();
+            cargarModulo('inner');
+        };
+    </script>
 </body>
 </html>
