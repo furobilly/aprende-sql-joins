@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprende SQL JOINs — Dr. Código</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Motor SQL Real en el Navegador (AlaSQL) -->
+  <script src="https://cdn.jsdelivr.net/npm/alasql@4/dist/alasql.min.js"></script>
+  <style>
+    .glass-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+    }
+    .fade-in {
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    ::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #a5b4fc;
+      border-radius: 4px;
+    }
+    /* Transición para Menú Lateral */
+    .drawer-transition {
+      transition: transform 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+  <!-- CAPA DE CORTE DE FONDO PARA MENÚ LATERAL -->
+  <div id="drawer-overlay" onclick="toggleDrawer(false)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+
+  <!-- MENÚ LATERAL DESPLEGABLE (PÚRPURA / ÍNDIGO) -->
+  <aside id="drawer-menu" class="fixed top-0 left-0 bottom-0 w-72 md:w-80 bg-indigo-950 text-white z-50 drawer-transition -translate-x-full shadow-2xl flex flex-col justify-between">
+    <div>
+      <!-- Cabecera del Menú -->
+      <div class="p-4 bg-indigo-900 border-b border-indigo-800 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">🩺</span>
+          <div>
+            <h2 class="font-bold text-sm md:text-base leading-tight text-white">Dr. Código</h2>
+            <p class="text-[10px] md:text-xs text-indigo-300">Menú de Aprendizaje</p>
+          </div>
+        </div>
+        <button onclick="toggleDrawer(false)" class="text-indigo-200 hover:text-white p-1.5 rounded-lg text-lg">✕</button>
+      </div>
+
+      <!-- Barra de Progreso en Menú -->
+      <div class="p-4 border-b border-indigo-900/60 bg-indigo-900/30">
+        <div class="flex justify-between items-center text-xs mb-1.5">
+          <span class="text-indigo-200 font-medium">Progreso Global</span>
+          <span id="menu-progress-text" class="text-emerald-400 font-bold font-mono">0%</span>
+        </div>
+        <div class="w-full bg-indigo-950 rounded-full h-2 overflow-hidden border border-indigo-800">
+          <div id="menu-progress-bar" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Links de Navegación -->
+      <nav class="p-3 space-y-1 text-xs md:text-sm">
+        <button onclick="navTo('challenges')" id="menu-item-challenges" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 bg-indigo-800/80 text-white font-bold transition">
+          <span class="text-base md:text-lg">🎯</span>
+          <span>Casos Prácticos (Retos)</span>
+        </button>
+        <button onclick="navTo('lab')" id="menu-item-lab" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">💻</span>
+          <span>Consola SQL Libre</span>
+        </button>
+        <button onclick="navTo('tables')" id="menu-item-tables" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">🗄️</span>
+          <span>Ver Tablas de la BD</span>
+        </button>
+        <button onclick="navTo('modules')" id="menu-item-modules" class="w-full text-left p-3 rounded-xl flex items-center space-x-3 text-indigo-200 hover:bg-indigo-900/50 hover:text-white transition">
+          <span class="text-base md:text-lg">📖</span>
+          <span>Lecciones Teóricas</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Pie del Menú -->
+    <div class="p-4 border-t border-indigo-900 text-[11px] md:text-xs text-indigo-300 flex justify-between items-center">
+      <span>SQL JOINs v2.5 (Responsivo)</span>
+      <button onclick="resetAllProgress()" class="text-[10px] md:text-xs text-red-300 hover:text-red-100 underline">Reiniciar Progreso</button>
+    </div>
+  </aside>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="bg-indigo-800 text-white p-3.5 md:p-4 sticky top-0 z-30 shadow-md">
+    <div class="flex justify-between items-center max-w-7xl mx-auto">
+      <div class="flex items-center space-x-3 md:space-x-4">
+        <!-- Botón de Hamburguesa ☰ -->
+        <button onclick="toggleDrawer(true)" class="p-1.5 md:p-2 rounded-lg bg-indigo-900/80 hover:bg-indigo-700 text-indigo-100 transition focus:outline-none">
+          <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <div>
+          <h1 id="header-section-title" class="font-bold text-sm md:text-lg leading-tight text-white">Casos Prácticos</h1>
+          <p class="text-[10px] md:text-xs text-indigo-200">Aprende SQL JOINs paso a paso</p>
+        </div>
+      </div>
+      
+      <span id="header-badge" class="bg-indigo-950 text-emerald-400 border border-indigo-700 text-[11px] md:text-xs px-3 py-1 rounded-full font-mono font-bold">
+        0% Completado
+      </span>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL FLUIDO Y RESPONSIVO -->
+  <main class="max-w-7xl mx-auto p-3.5 md:p-6 space-y-4 md:space-y-6">
+
+    <!-- SECCIÓN 1: CASOS PRÁCTICOS (VISTA PRINCIPAL) -->
+    <section id="sec-challenges" class="sec-content fade-in space-y-4 md:space-y-6">
+
+      <!-- 1️⃣ VISTA DE LAS 3 TABLAS FUENTE EN FORMATO ADAPTATIVO -->
+      <div class="bg-white rounded-xl border border-indigo-200 shadow-sm p-3.5 md:p-5 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <span class="font-bold text-xs md:text-sm text-indigo-950 flex items-center gap-1.5">
+            <span>🗄️</span> Tablas de la Base de Datos (Estructura SQL Real)
+          </span>
+          <span class="text-[10px] md:text-xs text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded font-semibold border border-indigo-100">3 Tablas Conectadas</span>
+        </div>
+
+        <!-- En laptop se colocan 3 columnas LADO A LADO; en móvil en 1 columna -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <!-- Tabla A: Ciudades -->
+          <div class="rounded-lg border border-blue-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-blue-50 px-2.5 py-1.5 border-b border-blue-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-blue-900 flex items-center gap-1">
+                <span>🏙️</span> Tabla: Ciudades
+              </span>
+              <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_ciudad</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_ciudad <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">nombre_ciudad</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">1</td>
+                    <td class="p-1.5 md:p-2">Madrid</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">2</td>
+                    <td class="p-1.5 md:p-2">Bogotá</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">3</td>
+                    <td class="p-1.5 md:p-2">Lima</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tabla B: Clientes -->
+          <div class="rounded-lg border border-indigo-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-indigo-50 px-2.5 py-1.5 border-b border-indigo-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-indigo-900 flex items-center gap-1">
+                <span>👥</span> Tabla: Clientes
+              </span>
+              <div class="flex gap-1 text-[10px]">
+                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_ciudad</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">nombre</th>
+                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_ciudad <span class="text-emerald-600 font-bold">(FK)</span></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">101</td>
+                    <td class="p-1.5 md:p-2">Ana</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">102</td>
+                    <td class="p-1.5 md:p-2">Carlos</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">2</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">103</td>
+                    <td class="p-1.5 md:p-2">Elena</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">1</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">104</td>
+                    <td class="p-1.5 md:p-2">David</td>
+                    <td class="p-1.5 md:p-2 text-red-500 font-bold bg-red-50/50">NULL</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tabla C: Pedidos -->
+          <div class="rounded-lg border border-emerald-200 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="bg-emerald-50 px-2.5 py-1.5 border-b border-emerald-200 flex justify-between items-center text-xs">
+              <span class="font-bold text-emerald-900 flex items-center gap-1">
+                <span>🛍️</span> Tabla: Pedidos
+              </span>
+              <div class="flex gap-1 text-[10px]">
+                <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-mono font-bold">PK: id_pedido</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">FK: id_cliente</span>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs font-mono border-collapse">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200 text-[10px] md:text-[11px]">
+                  <tr class="divide-x divide-slate-200">
+                    <th class="p-1.5 md:p-2 text-indigo-900 font-bold">id_pedido <span class="text-amber-600 font-bold">(PK)</span></th>
+                    <th class="p-1.5 md:p-2 text-emerald-900 font-bold">id_cliente <span class="text-emerald-600 font-bold">(FK)</span></th>
+                    <th class="p-1.5 md:p-2 font-bold">producto</th>
+                    <th class="p-1.5 md:p-2 font-bold">monto</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-[11px] md:text-xs">
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">501</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
+                    <td class="p-1.5 md:p-2">Laptop</td>
+                    <td class="p-1.5 md:p-2">$1200</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">502</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">101</td>
+                    <td class="p-1.5 md:p-2">Mouse</td>
+                    <td class="p-1.5 md:p-2">$25</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">503</td>
+                    <td class="p-1.5 md:p-2 text-emerald-700 font-bold">102</td>
+                    <td class="p-1.5 md:p-2">Teclado</td>
+                    <td class="p-1.5 md:p-2">$80</td>
+                  </tr>
+                  <tr class="divide-x divide-slate-100">
+                    <td class="p-1.5 md:p-2 font-bold text-indigo-700 bg-slate-50/50">504</td>
+                    <td class="p-1.5 md:p-2 text-red-600 font-bold bg-red-50/50">999</td>
+                    <td class="p-1.5 md:p-2">Monitor</td>
+                    <td class="p-1.5 md:p-2">$300</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selector Rápido de Casos -->
+      <div class="flex space-x-2 overflow-x-auto pb-1 text-xs md:text-sm">
+        <button onclick="selectChallenge(1)" id="chal-tab-1" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-indigo-700 text-white border-indigo-700 shadow-sm transition">
+          Reto 1 (LEFT JOIN)
+        </button>
+        <button onclick="selectChallenge(2)" id="chal-tab-2" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 2 (INNER JOIN)
+        </button>
+        <button onclick="selectChallenge(3)" id="chal-tab-3" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 3 (Triple JOIN)
+        </button>
+        <button onclick="selectChallenge(4)" id="chal-tab-4" class="chal-tab px-4 py-2 rounded-lg border font-bold shrink-0 bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition">
+          Reto 4 (GROUP BY + SUM)
+        </button>
+      </div>
+
+      <!-- ZONA DE RESOLUCIÓN: 2 Columnas en Laptop (lg:grid-cols-12), 1 Columna en Celular -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start">
+        
+        <!-- 2️⃣ COLUMNA IZQUIERDA EN LAPTOP: ENUNCIADO DEL CASO -->
+        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-4 md:p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <span id="chal-badge" class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded border border-indigo-100">
+              Misión 1
+            </span>
+            <span id="chal-status" class="text-[10px] md:text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded">
+              ⏳ Pendiente
+            </span>
+          </div>
+
+          <h3 id="chal-title" class="font-bold text-sm md:text-base text-slate-900">Cargando caso...</h3>
+          <p id="chal-desc" class="text-xs md:text-sm text-slate-600 leading-relaxed">...</p>
+        </div>
+
+        <!-- 3️⃣ COLUMNA DERECHA EN LAPTOP: EDITOR SQL + TECLADO + BOTÓN VALIDAR -->
+        <div class="lg:col-span-7 bg-slate-950 p-4 md:p-5 rounded-xl shadow-lg border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center text-xs md:text-sm">
+            <span class="font-bold text-indigo-300 flex items-center gap-1.5">
+              <span>✏️</span> Escribe tu Consulta SQL:
+            </span>
+            <button onclick="resetEditorQuery()" class="text-[11px] md:text-xs text-slate-400 hover:text-slate-200 underline">Restaurar Ejemplo</button>
+          </div>
+
+          <textarea id="sql-editor" rows="4" class="w-full bg-slate-900 text-emerald-400 font-mono text-xs md:text-sm p-3 rounded-lg border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed" placeholder="Escribe SELECT..."></textarea>
+
+          <!-- Teclado Táctil de Comandos -->
+          <div class="flex flex-wrap gap-1.5 text-[10px] md:text-xs font-mono">
+            <button onclick="insertSql('SELECT ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">SELECT</button>
+            <button onclick="insertSql('Clientes AS c ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Clientes c</button>
+            <button onclick="insertSql('Pedidos AS p ')" class="bg-indigo-950 text-indigo-200 border border-indigo-800 px-2.5 py-1 rounded hover:bg-indigo-900">Pedidos p</button>
+            <button onclick="insertSql('LEFT JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">LEFT JOIN</button>
+            <button onclick="insertSql('INNER JOIN ')" class="bg-purple-950 text-purple-200 border border-purple-800 px-2.5 py-1 rounded font-bold hover:bg-purple-900">INNER JOIN</button>
+            <button onclick="insertSql('ON c.id = p.id_cliente ')" class="bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1 rounded hover:bg-emerald-900">ON c.id = p.id_cliente</button>
+          </div>
+
+          <button onclick="validateCurrentChallenge()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow-md transition">
+            <span>🚀</span>
+            <span>Validar Consulta y Ver Resultado</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 4️⃣ ANCHO COMPLETO: RESULTADO DE LA VALIDACIÓN Y TABLA RESULTANTE -->
+      <div id="result-feedback" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold leading-relaxed"></div>
+
+      <div id="result-table-box" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-50 p-3 border-b border-slate-200 font-bold text-xs md:text-sm text-slate-700 flex justify-between items-center">
+          <span>📊 Resultado Obtenido</span>
+          <span id="result-rows-count" class="bg-indigo-100 text-indigo-800 text-[11px] md:text-xs px-2.5 py-0.5 rounded-full font-mono">0 filas</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm font-mono">
+            <thead id="result-thead" class="bg-slate-100 text-slate-600 border-b text-[10px] md:text-xs"></thead>
+            <tbody id="result-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓN 2: CONSOLA LIBRE DE SQL -->
+    <section id="sec-lab" class="sec-content hidden fade-in space-y-4">
+      <div class="bg-slate-900 text-white rounded-xl p-4 shadow-md space-y-1">
+        <h2 class="font-bold text-sm md:text-base text-emerald-400">💻 Consola SQL Libre</h2>
+        <p class="text-xs md:text-sm text-slate-300">
+          Escribe y ejecuta cualquier consulta SQL sobre las tablas reales en memoria.
+        </p>
+      </div>
+
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+        <textarea id="free-sql-input" rows="5" class="w-full bg-transparent text-emerald-400 font-mono text-xs md:text-sm focus:outline-none resize-none leading-relaxed" placeholder="SELECT * FROM Clientes;"></textarea>
+
+        <button onclick="runFreeQuery()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-lg text-xs md:text-sm flex justify-center items-center gap-2 shadow">
+          <span>▶️</span>
+          <span>Ejecutar SQL</span>
+        </button>
+      </div>
+
+      <div id="free-msg" class="hidden p-4 rounded-xl text-xs md:text-sm font-semibold"></div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-50 p-3 border-b text-xs md:text-sm font-bold text-slate-700 flex justify-between">
+          <span>Resultado Consola</span>
+          <span id="free-count" class="text-[11px] md:text-xs bg-slate-200 px-2.5 py-0.5 rounded font-mono">0 filas</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm font-mono">
+            <thead id="free-thead" class="bg-slate-100 border-b"></thead>
+            <tbody id="free-tbody" class="divide-y divide-slate-100 text-[11px] md:text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: TABLAS COMPLETAS BD -->
+    <section id="sec-tables" class="sec-content hidden fade-in space-y-4">
+      <div class="bg-indigo-900 text-white p-4 rounded-xl text-xs md:text-sm">
+        <h2 class="font-bold text-sm md:text-base text-emerald-300">🗄️ Detalle de Tablas en Memoria</h2>
+        <p class="text
