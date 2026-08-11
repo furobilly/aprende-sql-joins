@@ -72,6 +72,19 @@
     return snap.docs.map(d => d.data());
   };
 
+  // ---- Progreso del Entrenador de lógica (colección "progreso_ejercicios") ----
+  window._saveExerciseProgress = async (progressObj) => {
+    await setDoc(doc(firestore, 'progreso_ejercicios', 'principal'), {
+      data: JSON.stringify(progressObj),
+      fecha: new Date().toISOString()
+    });
+  };
+  window._loadExerciseProgress = async () => {
+    const snap = await getDoc(doc(firestore, 'progreso_ejercicios', 'principal'));
+    if (snap.exists() && snap.data().data) return JSON.parse(snap.data().data);
+    return null;
+  };
+
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -771,6 +784,18 @@ const exercises = [
     secondary:[{table:'DSCatCtes', from:'DSCajPagos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}],
     text:()=>'Muestra el folio de cada pago junto con el nombre del cliente que pagó.',
     sql:()=>`SELECT p.Folio_CPag, c.Nom_Cte FROM DSCajPagos p INNER JOIN DSCatCtes c ON p.Cod_Cte=c.Cod_Cte`},
+  {id:'l1e8', level:1, pill:'inner', main:'DSInvProdSer',
+    secondary:[{table:'DSCatSucu', from:'DSInvProdSer', onFrom:'Cod_Sucu', onTo:'Cod_Sucu', type:'INNER'}],
+    text:()=>'Muestra el número de serie de cada unidad de inventario junto con el nombre de la sucursal donde está.',
+    sql:()=>`SELECT p.NumSer_PSer, s.Nom_Suc FROM DSInvProdSer p INNER JOIN DSCatSucu s ON p.Cod_Sucu=s.Cod_Sucu`},
+  {id:'l1e9', level:1, pill:'inner', main:'DSVtaPedidos',
+    secondary:[{table:'DSCatModelos', from:'DSVtaPedidos', onFrom:'Cod_Mod', onTo:'Cod_CMod', type:'INNER'}],
+    text:()=>'Muestra el número de pedido junto con la descripción del modelo vendido.',
+    sql:()=>`SELECT v.Num_Ped, m.Desc_CMod FROM DSVtaPedidos v INNER JOIN DSCatModelos m ON v.Cod_Mod=m.Cod_CMod`},
+  {id:'l1e10', level:1, pill:'inner', main:'DSFacFact',
+    secondary:[{table:'DSCatCtes', from:'DSFacFact', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}],
+    text:()=>'Muestra el número de factura junto con el nombre del cliente facturado.',
+    sql:()=>`SELECT f.NumFac_Fact, c.Nom_Cte FROM DSFacFact f INNER JOIN DSCatCtes c ON f.Cod_Cte=c.Cod_Cte`},
 
   // NIVEL 2 — INNER JOIN múltiple (6)
   {id:'l2e1', level:2, pill:'inner', main:'DSVtaPedidos',
@@ -819,6 +844,29 @@ const exercises = [
     genParams:()=>({mod:randOf(['HLX','COR','RAV','CIV','CRV','RIO','SPT','SEA','ESX','MNX'])}),
     text:p=>`Muestra el nombre del cliente prospecto y el modelo cotizado, solo para el modelo '${p.mod}'.`,
     sql:p=>`SELECT c.Nom_Cte, m.Desc_CMod FROM DSVtaCotiza co INNER JOIN DSCatCtes c ON co.Cod_Pros=c.Cod_Cte INNER JOIN DSCatModelos m ON co.Cod_Mod=m.Cod_CMod WHERE m.Cod_CMod='${p.mod}'`},
+  {id:'l2e7', level:2, pill:'inner', main:'DSInvProdSer',
+    secondary:[
+      {table:'DSInvArt', from:'DSInvProdSer', onFrom:'Cod_Art', onTo:'Cod_Art', type:'INNER'},
+      {table:'DSCatSucu', from:'DSInvProdSer', onFrom:'Cod_Sucu', onTo:'Cod_Sucu', type:'INNER'}
+    ],
+    genParams:()=>({sucu:randOf(['GDL','SLP','MTY','CDMX'])}),
+    text:p=>`Muestra el VIN, la descripción del artículo y la sucursal, solo para la sucursal '${p.sucu}'.`,
+    sql:p=>`SELECT p.NumSer_PSer, a.Desc_Art, s.Nom_Suc FROM DSInvProdSer p INNER JOIN DSInvArt a ON p.Cod_Art=a.Cod_Art INNER JOIN DSCatSucu s ON p.Cod_Sucu=s.Cod_Sucu WHERE s.Cod_Sucu='${p.sucu}'`},
+  {id:'l2e8', level:2, pill:'inner', main:'DSVtaPedidos',
+    secondary:[
+      {table:'DSCatModelos', from:'DSVtaPedidos', onFrom:'Cod_Mod', onTo:'Cod_CMod', type:'INNER'},
+      {table:'DSCatCtes', from:'DSVtaPedidos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}
+    ],
+    genParams:()=>({mod:randOf(['HLX','COR','RAV','CIV','CRV','RIO','SPT','SEA','ESX','MNX'])}),
+    text:p=>`Muestra el cliente y el modelo vendido, solo para el modelo '${p.mod}'.`,
+    sql:p=>`SELECT c.Nom_Cte, m.Desc_CMod FROM DSVtaPedidos v INNER JOIN DSCatModelos m ON v.Cod_Mod=m.Cod_CMod INNER JOIN DSCatCtes c ON v.Cod_Cte=c.Cod_Cte WHERE m.Cod_CMod='${p.mod}'`},
+  {id:'l2e9', level:2, pill:'inner', main:'DSFacDocOri',
+    secondary:[
+      {table:'DSCatCtes', from:'DSFacDocOri', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSCajPagos', from:'DSCatCtes', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}
+    ],
+    text:()=>'Muestra el cliente, el folio de su documento de servicio y el folio de un pago que haya hecho ese mismo cliente.',
+    sql:()=>`SELECT c.Nom_Cte, d.FolDoc_DOri, p.Folio_CPag FROM DSFacDocOri d INNER JOIN DSCatCtes c ON d.Cod_Cte=c.Cod_Cte INNER JOIN DSCajPagos p ON c.Cod_Cte=p.Cod_Cte`},
 
   // NIVEL 3 — LEFT JOIN (6)
   {id:'l3e1', level:3, pill:'left', main:'DSCatCtes',
@@ -845,6 +893,14 @@ const exercises = [
     secondary:[{table:'DSVtaPedidos', from:'DSVtaCotiza', onFrom:'Cod_Pros', onTo:'Cod_Cte', type:'LEFT'}],
     text:()=>'Encuentra las cotizaciones de clientes que nunca llegaron a comprar (para darles seguimiento).',
     sql:()=>`SELECT co.Num_Cot FROM DSVtaCotiza co LEFT JOIN DSVtaPedidos v ON co.Cod_Pros=v.Cod_Cte WHERE v.Num_Ped IS NULL`},
+  {id:'l3e7', level:3, pill:'left', main:'DSInvProdSer',
+    secondary:[{table:'DSCatCtes', from:'DSInvProdSer', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'LEFT'}],
+    text:()=>'Muestra cada unidad de inventario y el cliente al que está asignada (NULL si sigue disponible en stock).',
+    sql:()=>`SELECT p.NumSer_PSer, c.Nom_Cte FROM DSInvProdSer p LEFT JOIN DSCatCtes c ON p.Cod_Cte=c.Cod_Cte`},
+  {id:'l3e8', level:3, pill:'left', main:'DSCatModelos',
+    secondary:[{table:'DSVtaPedidos', from:'DSCatModelos', onFrom:'Cod_CMod', onTo:'Cod_Mod', type:'LEFT'}],
+    text:()=>'Encuentra los modelos del catálogo que nunca se han vendido.',
+    sql:()=>`SELECT m.Desc_CMod FROM DSCatModelos m LEFT JOIN DSVtaPedidos v ON m.Cod_CMod=v.Cod_Mod WHERE v.Num_Ped IS NULL`},
 
   // NIVEL 4 — RIGHT / FULL OUTER (5)
   {id:'l4e1', level:4, pill:'right', main:'DSVtaPedidos',
@@ -867,6 +923,14 @@ const exercises = [
     secondary:[{table:'DSExtGtaXVin', from:'DSVtaPedidos', onFrom:'VinAut_Ped', onTo:'AutVIN', type:'FULL'}],
     text:()=>'Auditoría: encuentra pedidos sin garantía y garantías cuyo VIN no corresponda a ningún pedido registrado.',
     sql:()=>`SELECT v.Num_Ped, g.Numero_Pol FROM DSVtaPedidos v FULL OUTER JOIN DSExtGtaXVin g ON v.VinAut_Ped=g.AutVIN WHERE v.Num_Ped IS NULL OR g.Numero_Pol IS NULL`},
+  {id:'l4e6', level:4, pill:'right', main:'DSCajPagos',
+    secondary:[{table:'DSCatCtes', from:'DSCajPagos', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los clientes y su Folio_CPag cuando hayan pagado (incluye a los que nunca han pagado). Parte de DSCajPagos y usa RIGHT JOIN.',
+    sql:()=>`SELECT c.Nom_Cte, p.Folio_CPag FROM DSCajPagos p RIGHT JOIN DSCatCtes c ON p.Cod_Cte=c.Cod_Cte`},
+  {id:'l4e7', level:4, pill:'right', main:'DSVtaCotiza',
+    secondary:[{table:'DSCatEmp', from:'DSVtaCotiza', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'RIGHT'}],
+    text:()=>'Muestra TODOS los empleados y el Num_Cot de las cotizaciones que han levantado (incluye a los que nunca han cotizado). Parte de DSVtaCotiza y usa RIGHT JOIN.',
+    sql:()=>`SELECT e.Nom_Emp, co.Num_Cot FROM DSVtaCotiza co RIGHT JOIN DSCatEmp e ON co.Cod_Vend=e.Cod_Emp`},
 
   // NIVEL 5 — CROSS / AUTO-JOIN (5)
   {id:'l5e1', level:5, pill:'cross', main:'DSCatSucu',
@@ -889,6 +953,10 @@ const exercises = [
     secondary:[{table:'DSCajTpFPag', from:'DSSerCatSer', onFrom:null, onTo:null, type:'CROSS'}],
     text:()=>'Genera todas las combinaciones de Servicio + Forma de pago (para armar un catálogo de promociones).',
     sql:()=>`SELECT sv.Desc_Serv, tf.Desc_Tfp FROM DSSerCatSer sv CROSS JOIN DSCajTpFPag tf`},
+  {id:'l5e6', level:5, pill:'cross', main:'DSCatModelos',
+    secondary:[{table:'DSCatSucu', from:'DSCatModelos', onFrom:null, onTo:null, type:'CROSS'}],
+    text:()=>'Genera una matriz de todas las combinaciones de Modelo + Sucursal (para planear qué modelos ofrecer en cada sucursal).',
+    sql:()=>`SELECT m.Desc_CMod, s.Nom_Suc FROM DSCatModelos m CROSS JOIN DSCatSucu s`},
 
   // NIVEL 6 — Tabla puente y combinaciones (6)
   {id:'l6e1', level:6, pill:'inner', main:'DSFacDetArtAdi',
@@ -928,13 +996,37 @@ const exercises = [
       {table:'DSCatCtes', from:'DSExtGtaXVin', onFrom:'Cod_Cte', onTo:'Cod_Cte', type:'INNER'}
     ],
     text:()=>'Muestra el número de póliza, el VIN de la unidad y el nombre del cliente de cada garantía.',
-    sql:()=>`SELECT g.Numero_Pol, p.NumSer_PSer, c.Nom_Cte FROM DSExtGtaXVin g INNER JOIN DSInvProdSer p ON g.AutVIN=p.NumSer_PSer INNER JOIN DSCatCtes c ON g.Cod_Cte=c.Cod_Cte`}
+    sql:()=>`SELECT g.Numero_Pol, p.NumSer_PSer, c.Nom_Cte FROM DSExtGtaXVin g INNER JOIN DSInvProdSer p ON g.AutVIN=p.NumSer_PSer INNER JOIN DSCatCtes c ON g.Cod_Cte=c.Cod_Cte`},
+  {id:'l6e7', level:6, pill:'left', main:'DSVtaCotiza',
+    secondary:[
+      {table:'DSCatCtes', from:'DSVtaCotiza', onFrom:'Cod_Pros', onTo:'Cod_Cte', type:'INNER'},
+      {table:'DSCatEmp', from:'DSVtaCotiza', onFrom:'Cod_Vend', onTo:'Cod_Emp', type:'LEFT'}
+    ],
+    text:()=>'Muestra cada cotización con su cliente y el vendedor que la levantó (NULL si no tiene vendedor asignado). Combina INNER y LEFT.',
+    sql:()=>`SELECT c.Nom_Cte, co.Num_Cot, e.Nom_Emp FROM DSVtaCotiza co INNER JOIN DSCatCtes c ON co.Cod_Pros=c.Cod_Cte LEFT JOIN DSCatEmp e ON co.Cod_Vend=e.Cod_Emp`}
 ];
 exercises.forEach(e=>{ if(!e.genParams) e.genParams = ()=>({}); });
 
 let progress = {};
 function loadProgress(){ try{ progress = JSON.parse(localStorage.getItem(LS_KEY)||'{}'); }catch(e){ progress={}; } }
-function saveProgress(){ localStorage.setItem(LS_KEY, JSON.stringify(progress)); renderProgressBar(); renderLevelRow(); renderExMiniList(); }
+async function loadProgressCloud(){
+  loadProgress(); // localStorage primero, para que se vea algo de inmediato
+  try{
+    const ok = await waitForFirebase(4000);
+    if(!ok || !window._loadExerciseProgress) return;
+    const cloud = await window._loadExerciseProgress();
+    if(cloud){
+      progress = { ...progress, ...cloud }; // combina, por si hay avance local que no se ha subido
+      localStorage.setItem(LS_KEY, JSON.stringify(progress));
+    }
+    renderProgressBar(); renderLevelRow(); renderExMiniList();
+  }catch(e){}
+}
+function saveProgress(){
+  localStorage.setItem(LS_KEY, JSON.stringify(progress));
+  renderProgressBar(); renderLevelRow(); renderExMiniList();
+  if(window._saveExerciseProgress) window._saveExerciseProgress(progress).catch(()=>{});
+}
 function renderProgressBar(){
   const total = exercises.length;
   const done = Object.values(progress).filter(Boolean).length;
@@ -957,7 +1049,7 @@ initSqlJs({ locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10
     const info = db.exec(`PRAGMA table_info(${t})`)[0];
     tableColumns[t] = info ? info.values.map(r=>r[1]) : [];
   });
-  loadProgress();
+  loadProgressCloud();
   renderProgressBar();
   buildTableGrid();
   buildMap();
