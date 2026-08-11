@@ -119,6 +119,10 @@
   .table-btn small{color:var(--muted);display:block;margin-top:4px;}
   table.result{border-collapse:collapse;width:100%;font-size:.82rem;margin-top:10px;}
   table.result th, table.result td{border:1px solid var(--border);padding:5px 9px;text-align:left;white-space:nowrap;}
+  #spResult, #spFollowupResult{overflow-x:auto;}
+  #spResult table.result, #spFollowupResult table.result{table-layout:fixed;width:100%;}
+  #spResult table.result th, #spResult table.result td,
+  #spFollowupResult table.result th, #spFollowupResult table.result td{white-space:normal;word-break:break-word;}
   table.result th{background:var(--panel2);color:var(--accent2);position:sticky;top:0;}
   table.result tr:nth-child(even) td{background:#141a2a;}
   .scrollx{overflow:auto;max-height:340px;border:1px solid var(--border);border-radius:8px;}
